@@ -9,6 +9,7 @@ import NotesApp from "@/components/ui/NotesApp";
 import BacklogApp from "@/components/ui/BacklogApp";
 import ScheduleApp from "@/components/ui/ScheduleApp";
 import SettingsApp from "@/components/ui/SettingsApp";
+import SolitaireApp from "@/components/ui/SolitaireApp";
 import { WALLPAPER_STYLES, STORAGE_KEY, type WallpaperKey } from "@/components/ui/SettingsApp";
 
 /* ─────────────────────────────────────────────────────────────
@@ -38,6 +39,7 @@ const APP_ICONS = [
   { id: "notes",    icon: "📓", label: "Notes" },
   { id: "calendar", icon: "📅", label: "Schedule" },
   { id: "settings", icon: "⚙️",  label: "Settings" },
+  { id: "solitaire", icon: "🃏", label: "Solitaire" },
 ];
 
 /* ─────────────────────────────────────────────────────────────
@@ -130,6 +132,18 @@ function makeWindows(vw: number): WindowState[] {
       zIndex: 5,
       position: mobile ? { x: 8, y: 60 } : { x: 280, y: 90 },
       width: W ?? 420,
+      height: "auto",
+    },
+    {
+      id: "solitaire",
+      title: "Solitaire",
+      icon: "🃏",
+      open: false,
+      minimized: false,
+      focused: false,
+      zIndex: 4,
+      position: mobile ? { x: 8, y: 60 } : { x: 200, y: 60 },
+      width: mobile ? (W ?? 360) : 560,
       height: "auto",
     },
   ];
@@ -275,8 +289,9 @@ function WindowContent({ id, onOpenWindow }: { id: string; onOpenWindow: (id: st
     case "backlog":  return <BacklogApp />;
     case "notes":    return <NotesApp />;
     case "calendar": return <ScheduleApp />;
-    case "settings": return <SettingsApp />;
-    default:         return <div style={{ padding: "24px", textAlign: "center", color: "#6b6560" }}>{id}</div>;
+    case "settings":  return <SettingsApp />;
+    case "solitaire": return <SolitaireApp />;
+    default:          return <div style={{ padding: "24px", textAlign: "center", color: "#6b6560" }}>{id}</div>;
   }
 }
 
