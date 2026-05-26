@@ -22,6 +22,8 @@ type PileId =
   | "foundation-0" | "foundation-1" | "foundation-2" | "foundation-3"
   | "tableau-0" | "tableau-1" | "tableau-2" | "tableau-3" | "tableau-4" | "tableau-5" | "tableau-6";
 
+interface PileRect { id: PileId; rect: DOMRect; }
+
 type PileLocation =
   | { type: "stock" }
   | { type: "waste" }
@@ -136,7 +138,8 @@ export default function SolitaireApp() {
   const [game, setGame] = useState<GameState>(() => newGame());
   const [drag, setDrag] = useState<DragState | null>(null);
   const dragRef = useRef<DragState | null>(null);
-  const hoveredPileRef = useRef<PileId | null>(null);
+  const pileRectsRef = useRef<PileRect[]>([]);
+  const pileElemsRef = useRef<Map<PileId, HTMLElement>>(new Map());
   const containerRef = useRef<HTMLDivElement>(null);
   const [cardW, setCardW] = useState(58);
   const cardH = Math.round(cardW * 1.4);
@@ -164,24 +167,27 @@ export default function SolitaireApp() {
     setDrag({ ...dragRef.current });
   }, []);
 
-  const onPointerUp = useCallback(() => {
+  const onPointerUp = useCallback((e: PointerEvent) => {
     window.removeEventListener("pointermove", onPointerMove);
     window.removeEventListener("pointerup", onPointerUp);
 
     const current = dragRef.current;
     dragRef.current = null;
     setDrag(null);
+    if (!current) return;
 
-    const targetPile = hoveredPileRef.current;
-    hoveredPileRef.current = null;
-    if (!current || !targetPile) return;
+    // Hit-test: find which pile rect contains the drop point
+    const x = e.clientX, y = e.clientY;
+    const hit = pileRectsRef.current.find(({ rect }) =>
+      x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom
+    );
+    if (!hit) return;
 
     let dest: PileLocation | null = null;
-    if (targetPile.startsWith("foundation-")) {
-      dest = { type: "foundation", index: parseInt(targetPile.split("-")[1]) };
-    } else if (targetPile.startsWith("tableau-")) {
-      dest = { type: "tableau", index: parseInt(targetPile.split("-")[1]), cardIndex: 0 };
-    }
+    if (hit.id.startsWith("foundation-"))
+      dest = { type: "foundation", index: parseInt(hit.id.split("-")[1]) };
+    else if (hit.id.startsWith("tableau-"))
+      dest = { type: "tableau", index: parseInt(hit.id.split("-")[1]), cardIndex: 0 };
     if (!dest) return;
     setGame(prev => applyMove(prev, current.source, dest!, current.cards));
   }, [onPointerMove]);
@@ -191,7 +197,12 @@ export default function SolitaireApp() {
     e.preventDefault();
     e.stopPropagation();
 
-    // Get offset from top-left of the element being dragged
+    // Snapshot bounding rects of all registered pile elements
+    pileRectsRef.current = Array.from(pileElemsRef.current.entries()).map(([id, el]) => ({
+      id,
+      rect: el.getBoundingClientRect(),
+    }));
+
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     const state: DragState = {
       cards, source,
@@ -255,15 +266,12 @@ export default function SolitaireApp() {
     });
   }
 
-  /* Drop zone props — pile registers hover via pointer enter/leave */
+  /* Register a pile element so we can hit-test by rect on drop */
   function dropZone(pileId: PileId) {
     return {
-      onPointerOver: (e: React.PointerEvent) => {
-        e.stopPropagation();
-        if (dragRef.current) hoveredPileRef.current = pileId;
-      },
-      onPointerLeave: () => {
-        if (hoveredPileRef.current === pileId) hoveredPileRef.current = null;
+      ref: (el: HTMLDivElement | null) => {
+        if (el) pileElemsRef.current.set(pileId, el);
+        else pileElemsRef.current.delete(pileId);
       },
     };
   }
