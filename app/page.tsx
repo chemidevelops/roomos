@@ -1,508 +1,547 @@
 "use client";
 
-import { useState } from "react";
-import TopBar from "@/components/ui/TopBar";
-import Sidebar from "@/components/ui/Sidebar";
-import Card from "@/components/ui/Card";
+import { useState, useCallback } from "react";
 import FocusTimer from "@/components/ui/FocusTimer";
+import OSWindow from "@/components/ui/OSWindow";
+import DesktopIconItem from "@/components/ui/DesktopIconItem";
+import OSTaskbar from "@/components/ui/OSTaskbar";
+import Card from "@/components/ui/Card";
 
-/* ── HOME view ── */
-function HomeView() {
-  const hour = new Date().getHours();
-  const greeting =
-    hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
-  const today = new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
-
-  const QUEUE = [
-    { title: "Shetland S02E04", category: "Series", color: "#1d4ed8" },
-    { title: "Patlabor Vol. 2", category: "Manga", color: "#dc2626" },
-    { title: "Hokuto no Ken", category: "Anime", color: "#0d9488" },
-  ];
-
-  return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "20px",
-      }}
-    >
-      {/* Greeting */}
-      <div>
-        <h1
-          style={{
-            fontFamily: "var(--font-space-grotesk), sans-serif",
-            fontSize: "clamp(24px, 4vw, 32px)",
-            fontWeight: 700,
-            color: "#1a1a1a",
-            margin: 0,
-            lineHeight: 1.1,
-          }}
-        >
-          {greeting}, Jose
-        </h1>
-        <p
-          style={{
-            fontFamily: "var(--font-space-grotesk), sans-serif",
-            fontSize: "14px",
-            color: "#6b6560",
-            margin: "6px 0 0",
-          }}
-        >
-          {today}
-        </p>
-      </div>
-
-      {/* 3-column grid (desktop), 1-col (mobile) */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-          gap: "16px",
-        }}
-      >
-        {/* CARD 1: NOW — full width */}
-        <Card
-          color="#f5c800"
-          style={{ gridColumn: "1 / -1" }}
-        >
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "12px",
-            }}
-          >
-            <div
-              style={{
-                fontSize: "10px",
-                fontWeight: 700,
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-                color: "#1a1a1a",
-              }}
-            >
-              Now
-            </div>
-            <div
-              style={{
-                fontSize: "clamp(22px, 3vw, 28px)",
-                fontWeight: 700,
-                color: "#1a1a1a",
-                fontFamily: "var(--font-space-grotesk), sans-serif",
-                lineHeight: 1.1,
-              }}
-            >
-              Final Fantasy X
-            </div>
-            <div style={{ fontSize: "14px", color: "#1a1a1a", opacity: 0.7 }}>
-              Videojuegos · 90 min
-            </div>
-
-            {/* Progress bar */}
-            <div
-              style={{
-                height: "8px",
-                background: "rgba(26,26,26,0.15)",
-                border: "1.5px solid #1a1a1a",
-                borderRadius: "2px",
-                position: "relative",
-                overflow: "hidden",
-              }}
-            >
-              <div
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  top: 0,
-                  height: "100%",
-                  width: "60%",
-                  background: "#1a1a1a",
-                  borderRadius: "1px",
-                }}
-              />
-            </div>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                fontSize: "11px",
-                fontFamily: "var(--font-jetbrains-mono), monospace",
-                color: "#1a1a1a",
-                opacity: 0.6,
-              }}
-            >
-              <span>54:00</span>
-              <span>90:00</span>
-            </div>
-
-            {/* Button */}
-            <button
-              className="btn-brutal"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "10px 20px",
-                background: "#1a1a1a",
-                color: "#f5c800",
-                fontSize: "13px",
-                fontWeight: 700,
-                fontFamily: "var(--font-space-grotesk), sans-serif",
-                borderRadius: "2px",
-                letterSpacing: "0.04em",
-                textTransform: "uppercase",
-                width: "fit-content",
-              }}
-            >
-              Start session →
-            </button>
-          </div>
-        </Card>
-
-        {/* CARD 2: FOCUS TIMER — half width */}
-        <Card>
-          <FocusTimer compact />
-        </Card>
-
-        {/* CARD 3: STREAK — half width */}
-        <Card>
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-            <div
-              style={{
-                fontSize: "10px",
-                fontWeight: 700,
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-                color: "#6b6560",
-              }}
-            >
-              Streak
-            </div>
-            <div
-              style={{
-                fontSize: "72px",
-                fontWeight: 700,
-                color: "#1a1a1a",
-                lineHeight: 1,
-                letterSpacing: "-0.04em",
-                fontFamily: "var(--font-space-grotesk), sans-serif",
-              }}
-            >
-              12
-            </div>
-            <div style={{ fontSize: "14px", color: "#6b6560", fontWeight: 500 }}>
-              days
-            </div>
-
-            {/* Week dots */}
-            <div style={{ display: "flex", gap: "6px", marginTop: "4px" }}>
-              {Array.from({ length: 7 }).map((_, i) => (
-                <div
-                  key={i}
-                  title={["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][i]}
-                  style={{
-                    flex: 1,
-                    height: "10px",
-                    borderRadius: "2px",
-                    background: i < 5 ? "#1a1a1a" : "#e8e2d5",
-                    border: "1.5px solid #1a1a1a",
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-        </Card>
-
-        {/* CARD 4: QUEUE — full width */}
-        <Card style={{ gridColumn: "1 / -1" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: "10px",
-                  fontWeight: 700,
-                  letterSpacing: "0.12em",
-                  textTransform: "uppercase",
-                  color: "#6b6560",
-                }}
-              >
-                Queue
-              </div>
-              <button
-                style={{
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  fontSize: "12px",
-                  fontWeight: 700,
-                  color: "#1a1a1a",
-                  fontFamily: "var(--font-space-grotesk), sans-serif",
-                  padding: 0,
-                  textDecoration: "underline",
-                  textUnderlineOffset: "3px",
-                }}
-              >
-                View all →
-              </button>
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              {QUEUE.map((item) => (
-                <div
-                  key={item.title}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "12px",
-                    padding: "10px 12px",
-                    background: "#f0ebe0",
-                    border: "1.5px solid #1a1a1a",
-                    borderRadius: "2px",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: "8px",
-                      height: "8px",
-                      borderRadius: "50%",
-                      background: item.color,
-                      flexShrink: 0,
-                    }}
-                  />
-                  <span
-                    style={{
-                      fontSize: "14px",
-                      fontWeight: 500,
-                      color: "#1a1a1a",
-                      flex: 1,
-                    }}
-                  >
-                    {item.title}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: "11px",
-                      fontWeight: 700,
-                      color: "#faf7f2",
-                      background: item.color,
-                      padding: "2px 8px",
-                      borderRadius: "2px",
-                      letterSpacing: "0.05em",
-                    }}
-                  >
-                    {item.category}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </Card>
-      </div>
-    </div>
-  );
+/* ─────────────────────────────────────────────────────────────
+   Window state types
+───────────────────────────────────────────────────────────── */
+interface WindowState {
+  id: string;
+  title: string;
+  icon: string;
+  open: boolean;
+  minimized: boolean;
+  focused: boolean;
+  zIndex: number;
+  position: { x: number; y: number };
+  width: number;
+  height?: number | "auto";
 }
 
-/* ── FOCUS view ── */
-function FocusView() {
-  return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        minHeight: "60vh",
-        gap: "0",
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "480px",
-        }}
-      >
-        <Card color="#faf7f2">
-          <FocusTimer compact={false} />
-        </Card>
-      </div>
-    </div>
-  );
-}
-
-/* ── PLACEHOLDER view ── */
-function PlaceholderView({ name }: { name: string }) {
-  return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "16px",
-      }}
-    >
-      <h2
-        style={{
-          fontFamily: "var(--font-space-grotesk), sans-serif",
-          fontSize: "28px",
-          fontWeight: 700,
-          color: "#1a1a1a",
-          margin: 0,
-        }}
-      >
-        {name}
-      </h2>
-      <Card>
-        <p style={{ color: "#6b6560", fontWeight: 500, margin: 0 }}>
-          {name} view coming soon.
-        </p>
-      </Card>
-    </div>
-  );
-}
-
-/* ── MOBILE bottom tab bar ── */
-const TABS = [
-  { id: "home",    icon: "⌂",  label: "Home" },
-  { id: "focus",   icon: "◎",  label: "Focus" },
-  { id: "backlog", icon: "≡",  label: "Backlog" },
-  { id: "journal", icon: "✎",  label: "Journal" },
-  { id: "music",   icon: "♪",  label: "Music" },
+/* ─────────────────────────────────────────────────────────────
+   Desktop icon definitions
+───────────────────────────────────────────────────────────── */
+const DESKTOP_ICONS = [
+  { id: "home",     icon: "🏠", label: "Home" },
+  { id: "focus",    icon: "⏱", label: "Focus" },
+  { id: "backlog",  icon: "📋", label: "Backlog" },
+  { id: "journal",  icon: "📓", label: "Journal" },
+  { id: "settings", icon: "⚙️",  label: "Settings" },
 ];
 
-function BottomTabBar({ activeView, onSelect }: { activeView: string; onSelect: (v: string) => void }) {
+/* ─────────────────────────────────────────────────────────────
+   Window content: NOW
+───────────────────────────────────────────────────────────── */
+const QUEUE = [
+  { title: "Shetland S02E04", category: "Series", color: "#1d4ed8" },
+  { title: "Patlabor Vol. 2",  category: "Manga",  color: "#dc2626" },
+  { title: "Hokuto no Ken",    category: "Anime",  color: "#0d9488" },
+];
+
+function NowWindowContent() {
   return (
-    <div
-      style={{
-        position: "fixed",
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: "56px",
-        background: "#faf7f2",
-        borderTop: "2px solid #1a1a1a",
-        display: "flex",
-        zIndex: 90,
-      }}
-      className="bottom-tabs-mobile"
-    >
-      {TABS.map((tab) => {
-        const isActive = activeView === tab.id;
-        return (
-          <button
-            key={tab.id}
-            onClick={() => onSelect(tab.id)}
-            style={{
-              flex: 1,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "2px",
-              background: isActive ? "#f5c800" : "transparent",
-              border: "none",
-              borderTop: isActive ? "3px solid #1a1a1a" : "3px solid transparent",
-              cursor: "pointer",
-              fontFamily: "var(--font-space-grotesk), sans-serif",
-            }}
-          >
-            <span style={{ fontSize: "18px", lineHeight: 1 }}>{tab.icon}</span>
-            <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#1a1a1a" }}>
-              {tab.label}
-            </span>
-          </button>
-        );
-      })}
+    <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "14px" }}>
+      {/* NOW label */}
+      <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#6b6560" }}>
+        Now
+      </div>
+
+      {/* Title */}
+      <div>
+        <div style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: "24px", fontWeight: 700, color: "#1a1a1a", lineHeight: 1.1 }}>
+          Final Fantasy X
+        </div>
+        <div style={{ fontSize: "13px", color: "#1a1a1a", opacity: 0.65, marginTop: "4px" }}>
+          🎮 Videojuegos · 90 min
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      <div>
+        <div style={{ height: "10px", background: "rgba(26,26,26,0.12)", border: "1.5px solid #1a1a1a", borderRadius: "2px", position: "relative", overflow: "hidden" }}>
+          <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: "40%", background: "#f5c800", borderRadius: "1px" }} />
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", fontFamily: "var(--font-jetbrains-mono), monospace", color: "#1a1a1a", opacity: 0.55, marginTop: "4px" }}>
+          <span>36:00</span>
+          <span>90:00</span>
+        </div>
+      </div>
+
+      {/* Start button */}
+      <button
+        className="btn-brutal"
+        style={{
+          width: "100%",
+          padding: "10px 0",
+          background: "#f5c800",
+          color: "#1a1a1a",
+          fontSize: "13px",
+          fontWeight: 700,
+          fontFamily: "var(--font-space-grotesk), sans-serif",
+          letterSpacing: "0.06em",
+          textTransform: "uppercase",
+          borderRadius: "2px",
+          border: "2px solid #1a1a1a",
+          cursor: "pointer",
+        }}
+      >
+        Start session →
+      </button>
+
+      {/* Divider */}
+      <div style={{ height: "1px", background: "#e8e2d5" }} />
+
+      {/* Queue preview */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+        <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#6b6560" }}>Up next</div>
+        {QUEUE.map((item) => (
+          <div key={item.title} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 10px", background: "#f0ebe0", border: "1.5px solid #1a1a1a", borderRadius: "2px" }}>
+            <div style={{ width: "7px", height: "7px", borderRadius: "50%", background: item.color, flexShrink: 0 }} />
+            <span style={{ fontSize: "13px", fontWeight: 500, color: "#1a1a1a", flex: 1 }}>{item.title}</span>
+            <span style={{ fontSize: "10px", fontWeight: 700, color: "#faf7f2", background: item.color, padding: "2px 7px", borderRadius: "2px", letterSpacing: "0.04em" }}>{item.category}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
 
-/* ── PAGE ── */
-export default function Home() {
-  const [activeView, setActiveView] = useState("home");
+/* ─────────────────────────────────────────────────────────────
+   Window content: HOME
+───────────────────────────────────────────────────────────── */
+function HomeWindowContent({ onOpenWindow }: { onOpenWindow: (id: string) => void }) {
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const today = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
 
-  function renderView() {
-    switch (activeView) {
-      case "home":    return <HomeView />;
-      case "focus":   return <FocusView />;
-      case "backlog": return <PlaceholderView name="Backlog" />;
-      case "journal": return <PlaceholderView name="Journal" />;
-      case "music":   return <PlaceholderView name="Music" />;
-      case "settings":return <PlaceholderView name="Settings" />;
-      default:        return <HomeView />;
-    }
+  return (
+    <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "16px" }}>
+      <div>
+        <div style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: "26px", fontWeight: 700, color: "#1a1a1a", lineHeight: 1.1 }}>
+          {greeting}, Jose
+        </div>
+        <div style={{ fontSize: "13px", color: "#6b6560", marginTop: "5px" }}>{today}</div>
+      </div>
+
+      {/* Mini stats */}
+      <div style={{ display: "flex", gap: "10px" }}>
+        <div style={{ flex: 1, padding: "12px", background: "#f0ebe0", border: "2px solid #1a1a1a", textAlign: "center" }}>
+          <div style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: "28px", fontWeight: 700, color: "#1a1a1a", lineHeight: 1 }}>12</div>
+          <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#6b6560", marginTop: "4px" }}>Day streak</div>
+        </div>
+        <div style={{ flex: 1, padding: "12px", background: "#f5c800", border: "2px solid #1a1a1a", textAlign: "center" }}>
+          <div style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: "28px", fontWeight: 700, color: "#1a1a1a", lineHeight: 1 }}>3/5</div>
+          <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#1a1a1a", marginTop: "4px" }}>Done today</div>
+        </div>
+      </div>
+
+      {/* Quick launch */}
+      <div>
+        <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#6b6560", marginBottom: "8px" }}>Quick launch</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+          {[
+            { id: "now", label: "📺 NOW — Final Fantasy X", desc: "Current activity" },
+            { id: "focus", label: "⏱ Focus Timer", desc: "Pomodoro session" },
+            { id: "backlog", label: "📋 Backlog", desc: "Manage your queue" },
+          ].map((item) => (
+            <button
+              key={item.id}
+              onClick={() => onOpenWindow(item.id)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "9px 12px",
+                background: "transparent",
+                border: "1.5px solid #1a1a1a",
+                borderRadius: "2px",
+                cursor: "pointer",
+                fontFamily: "var(--font-space-grotesk), sans-serif",
+                textAlign: "left",
+                transition: "background 0.1s",
+              }}
+              onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "#f0ebe0")}
+              onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "transparent")}
+            >
+              <span style={{ fontSize: "13px", fontWeight: 600, color: "#1a1a1a" }}>{item.label}</span>
+              <span style={{ fontSize: "11px", color: "#6b6560" }}>{item.desc} →</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Window content: PLACEHOLDER
+───────────────────────────────────────────────────────────── */
+function PlaceholderWindowContent({ name }: { name: string }) {
+  return (
+    <div style={{ padding: "24px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "120px", gap: "8px" }}>
+      <div style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: "18px", fontWeight: 700, color: "#1a1a1a" }}>{name}</div>
+      <div style={{ fontSize: "13px", color: "#6b6560" }}>Coming soon.</div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+   MOBILE — bottom tab bar + card layout
+───────────────────────────────────────────────────────────── */
+const MOBILE_TABS = [
+  { id: "home",    icon: "🏠", label: "Home" },
+  { id: "now",     icon: "📺", label: "Now" },
+  { id: "focus",   icon: "⏱", label: "Focus" },
+  { id: "backlog", icon: "📋", label: "Backlog" },
+  { id: "journal", icon: "📓", label: "Journal" },
+];
+
+function MobileView() {
+  const [activeTab, setActiveTab] = useState("home");
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const today = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+
+  return (
+    <div style={{ minHeight: "100dvh", background: "#f0ebe0", paddingBottom: "60px" }}>
+      {/* Simple top bar */}
+      <div style={{ height: "44px", background: "#faf7f2", borderBottom: "2px solid #1a1a1a", display: "flex", alignItems: "center", padding: "0 16px" }}>
+        <span style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: "14px", fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "#1a1a1a" }}>
+          rOS
+        </span>
+      </div>
+
+      <div style={{ padding: "20px 16px", display: "flex", flexDirection: "column", gap: "16px" }}>
+        {activeTab === "home" && (
+          <>
+            <div>
+              <h1 style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: "26px", fontWeight: 700, color: "#1a1a1a", margin: 0 }}>{greeting}, Jose</h1>
+              <p style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: "13px", color: "#6b6560", margin: "5px 0 0" }}>{today}</p>
+            </div>
+            <Card color="#f5c800">
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#1a1a1a" }}>Now</div>
+                <div style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: "22px", fontWeight: 700, color: "#1a1a1a" }}>Final Fantasy X</div>
+                <div style={{ fontSize: "13px", color: "#1a1a1a", opacity: 0.7 }}>🎮 Videojuegos · 90 min</div>
+                <div style={{ height: "8px", background: "rgba(26,26,26,0.15)", border: "1.5px solid #1a1a1a", borderRadius: "2px", position: "relative", overflow: "hidden" }}>
+                  <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: "40%", background: "#1a1a1a" }} />
+                </div>
+                <button className="btn-brutal" style={{ padding: "10px", background: "#1a1a1a", color: "#f5c800", fontSize: "13px", fontWeight: 700, fontFamily: "var(--font-space-grotesk), sans-serif", letterSpacing: "0.05em", textTransform: "uppercase", borderRadius: "2px", border: "2px solid #1a1a1a", cursor: "pointer" }}>
+                  Start session →
+                </button>
+              </div>
+            </Card>
+          </>
+        )}
+        {activeTab === "focus" && (
+          <Card><FocusTimer compact={false} /></Card>
+        )}
+        {activeTab === "now" && (
+          <Card color="#f5c800"><NowWindowContent /></Card>
+        )}
+        {(activeTab === "backlog" || activeTab === "journal") && (
+          <Card><PlaceholderWindowContent name={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} /></Card>
+        )}
+      </div>
+
+      {/* Mobile bottom tabs */}
+      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, height: "56px", background: "#faf7f2", borderTop: "2px solid #1a1a1a", display: "flex", zIndex: 90 }}>
+        {MOBILE_TABS.map((tab) => {
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "2px", background: isActive ? "#f5c800" : "transparent", border: "none", borderTop: isActive ? "3px solid #1a1a1a" : "3px solid transparent", cursor: "pointer", fontFamily: "var(--font-space-grotesk), sans-serif" }}
+            >
+              <span style={{ fontSize: "18px", lineHeight: 1 }}>{tab.icon}</span>
+              <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#1a1a1a" }}>{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Initial window definitions
+───────────────────────────────────────────────────────────── */
+const INITIAL_WINDOWS: WindowState[] = [
+  {
+    id: "now",
+    title: "NOW",
+    icon: "📺",
+    open: true,
+    minimized: false,
+    focused: true,
+    zIndex: 11,
+    position: { x: 160, y: 40 },
+    width: 400,
+    height: "auto",
+  },
+  {
+    id: "focus",
+    title: "Focus Timer",
+    icon: "⏱",
+    open: true,
+    minimized: false,
+    focused: false,
+    zIndex: 10,
+    position: { x: 580, y: 40 },
+    width: 340,
+    height: "auto",
+  },
+  {
+    id: "home",
+    title: "Home",
+    icon: "🏠",
+    open: false,
+    minimized: false,
+    focused: false,
+    zIndex: 9,
+    position: { x: 220, y: 80 },
+    width: 440,
+    height: "auto",
+  },
+  {
+    id: "backlog",
+    title: "Backlog",
+    icon: "📋",
+    open: false,
+    minimized: false,
+    focused: false,
+    zIndex: 8,
+    position: { x: 300, y: 100 },
+    width: 480,
+    height: "auto",
+  },
+  {
+    id: "journal",
+    title: "Journal",
+    icon: "📓",
+    open: false,
+    minimized: false,
+    focused: false,
+    zIndex: 7,
+    position: { x: 260, y: 120 },
+    width: 460,
+    height: "auto",
+  },
+  {
+    id: "settings",
+    title: "Settings",
+    icon: "⚙️",
+    open: false,
+    minimized: false,
+    focused: false,
+    zIndex: 6,
+    position: { x: 280, y: 90 },
+    width: 420,
+    height: "auto",
+  },
+];
+
+/* ─────────────────────────────────────────────────────────────
+   Desktop environment — renders window content by id
+───────────────────────────────────────────────────────────── */
+function WindowContent({ id, onOpenWindow }: { id: string; onOpenWindow: (id: string) => void }) {
+  switch (id) {
+    case "now":      return <NowWindowContent />;
+    case "focus":    return <div style={{ padding: "16px" }}><FocusTimer compact={false} /></div>;
+    case "home":     return <HomeWindowContent onOpenWindow={onOpenWindow} />;
+    case "backlog":  return <PlaceholderWindowContent name="Backlog" />;
+    case "journal":  return <PlaceholderWindowContent name="Journal" />;
+    case "settings": return <PlaceholderWindowContent name="Settings" />;
+    default:         return <PlaceholderWindowContent name={id} />;
   }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Desktop — main OS environment
+───────────────────────────────────────────────────────────── */
+function Desktop() {
+  const [windows, setWindows] = useState<WindowState[]>(INITIAL_WINDOWS);
+  const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
+  const [maxZ, setMaxZ] = useState(11);
+
+  const focusWindow = useCallback((id: string) => {
+    setMaxZ((prev) => {
+      const nextZ = prev + 1;
+      setWindows((ws) =>
+        ws.map((w) => ({
+          ...w,
+          focused: w.id === id,
+          zIndex: w.id === id ? nextZ : w.zIndex,
+        }))
+      );
+      return nextZ;
+    });
+  }, []);
+
+  const closeWindow = useCallback((id: string) => {
+    setWindows((ws) => ws.map((w) => (w.id === id ? { ...w, open: false, focused: false } : w)));
+  }, []);
+
+  const minimizeWindow = useCallback((id: string) => {
+    setWindows((ws) =>
+      ws.map((w) => (w.id === id ? { ...w, minimized: true, focused: false } : w))
+    );
+  }, []);
+
+  const openWindow = useCallback(
+    (id: string) => {
+      setWindows((ws) => {
+        const exists = ws.find((w) => w.id === id);
+        if (exists) {
+          return ws.map((w) =>
+            w.id === id
+              ? { ...w, open: true, minimized: false, focused: true, zIndex: maxZ + 1 }
+              : { ...w, focused: false }
+          );
+        }
+        // Shouldn't happen with our pre-defined list, but just in case
+        return ws;
+      });
+      setMaxZ((z) => z + 1);
+    },
+    [maxZ]
+  );
+
+  const handleTaskbarClick = useCallback(
+    (id: string) => {
+      const w = windows.find((win) => win.id === id);
+      if (!w) return;
+      if (w.focused && !w.minimized) {
+        minimizeWindow(id);
+      } else {
+        openWindow(id);
+        focusWindow(id);
+      }
+    },
+    [windows, minimizeWindow, openWindow, focusWindow]
+  );
+
+  const handleIconDoubleClick = useCallback(
+    (id: string) => {
+      openWindow(id);
+      focusWindow(id);
+      setSelectedIcon(null);
+    },
+    [openWindow, focusWindow]
+  );
 
   return (
     <div
       className="desktop-pattern"
       style={{
-        minHeight: "100dvh",
+        position: "fixed",
+        inset: 0,
         background: "#f0ebe0",
-        position: "relative",
+        overflow: "hidden",
+        paddingBottom: "36px",
       }}
+      onClick={() => setSelectedIcon(null)}
     >
-      {/* Top bar — always visible */}
-      <TopBar activeView={activeView} />
-
-      {/* Sidebar — desktop only */}
-      <Sidebar activeView={activeView} onSelect={setActiveView} />
-
-      {/* Main content */}
-      <main
+      {/* Desktop icons column — left side */}
+      <div
         style={{
-          marginTop: "36px",
-          marginLeft: 0,
-          minHeight: "calc(100dvh - 36px)",
-          overflowY: "auto",
-          padding: "24px 20px 80px",
+          position: "absolute",
+          top: "20px",
+          left: "20px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "6px",
+          zIndex: 5,
         }}
-        /* Tailwind can't handle this dynamic, so we use a style tag approach inline */
+        onClick={(e) => e.stopPropagation()}
       >
-        {/* Spacer for sidebar on desktop */}
-        <div
-          style={{
-            maxWidth: "960px",
-          }}
-          className="main-inner"
-        >
-          {renderView()}
-        </div>
-      </main>
+        {DESKTOP_ICONS.map((di) => (
+          <DesktopIconItem
+            key={di.id}
+            icon={di.icon}
+            label={di.label}
+            selected={selectedIcon === di.id}
+            onSelect={() => setSelectedIcon(di.id)}
+            onDoubleClick={() => handleIconDoubleClick(di.id)}
+          />
+        ))}
+      </div>
 
-      {/* Mobile bottom tabs */}
-      <BottomTabBar activeView={activeView} onSelect={setActiveView} />
+      {/* Windows */}
+      {windows
+        .filter((w) => w.open)
+        .map((w) => (
+          <OSWindow
+            key={w.id}
+            id={w.id}
+            title={w.title}
+            icon={w.icon}
+            defaultPosition={w.position}
+            width={w.width}
+            height={w.height}
+            focused={w.focused}
+            onFocus={() => focusWindow(w.id)}
+            onClose={() => closeWindow(w.id)}
+            onMinimize={() => minimizeWindow(w.id)}
+            minimized={w.minimized}
+            zIndex={w.zIndex}
+          >
+            <WindowContent id={w.id} onOpenWindow={openWindow} />
+          </OSWindow>
+        ))}
 
-      {/* Inline responsive styles */}
+      {/* Taskbar */}
+      <OSTaskbar
+        windows={windows}
+        onWindowClick={handleTaskbarClick}
+        onLauncherClick={() => {
+          // Open home window as a simple launcher action
+          openWindow("home");
+          focusWindow("home");
+        }}
+      />
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+   PAGE — switches between desktop and mobile layout
+───────────────────────────────────────────────────────────── */
+export default function Home() {
+  return (
+    <>
+      {/* Desktop OS — hidden on mobile */}
+      <div className="desktop-os-layer">
+        <Desktop />
+      </div>
+
+      {/* Mobile layout — hidden on desktop */}
+      <div className="mobile-os-layer">
+        <MobileView />
+      </div>
+
       <style>{`
-        @media (min-width: 768px) {
-          main {
-            margin-left: 200px !important;
-            padding-bottom: 24px !important;
-          }
-          .bottom-tabs-mobile {
-            display: none !important;
-          }
-          .sidebar-desktop {
-            display: flex !important;
-          }
+        .desktop-os-layer {
+          display: block;
+        }
+        .mobile-os-layer {
+          display: none;
         }
         @media (max-width: 767px) {
-          .sidebar-desktop {
-            display: none !important;
+          .desktop-os-layer {
+            display: none;
+          }
+          .mobile-os-layer {
+            display: block;
           }
         }
       `}</style>
-    </div>
+    </>
   );
 }
