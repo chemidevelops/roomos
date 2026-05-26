@@ -323,7 +323,7 @@ export default function SolitaireApp() {
         </div>
 
         {/* Waste */}
-        <div style={{ flexShrink: 0, ...dropZone("waste") }}>
+        <div style={{ flexShrink: 0 }} {...dropZone("waste")}>
           {game.waste.length > 0 ? (
             <div
               style={{ cursor: "grab", touchAction: "none" }}
@@ -354,7 +354,7 @@ export default function SolitaireApp() {
           const pileId = `foundation-${i}` as PileId;
           const dragging = isDraggingFrom({ type: "foundation", index: i });
           return (
-            <div key={i} style={{ flexShrink: 0, ...dropZone(pileId) }}>
+            <div key={i} style={{ flexShrink: 0 }} {...dropZone(pileId)}>
               {pile.length > 0 ? (
                 <div style={{ cursor: "grab", touchAction: "none" }}
                   onPointerDown={e => startDrag(e, [pile[pile.length - 1]], { type: "foundation", index: i })}
@@ -378,7 +378,8 @@ export default function SolitaireApp() {
           return (
             <div
               key={colIdx}
-              style={{ flex: 1, minWidth: cardW, minHeight: cardH, position: "relative", ...dropZone(pileId) }}
+              style={{ flex: 1, minWidth: cardW, minHeight: cardH, position: "relative" }}
+              {...dropZone(pileId)}
             >
               {col.length === 0
                 ? <EmptySlot w={cardW} h={cardH} label="K" />
