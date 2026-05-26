@@ -1,7 +1,6 @@
 "use client";
 
-import { useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useDragControls } from "framer-motion";
 
 export interface OSWindowProps {
   id: string;
@@ -33,9 +32,8 @@ export default function OSWindow({
   minimized,
   zIndex,
 }: OSWindowProps) {
-  const constraintsRef = useRef<HTMLDivElement>(null);
+  const dragControls = useDragControls();
 
-  // We render into a portal-like fixed wrapper — just position absolute on the desktop
   if (minimized) return null;
 
   const titleBarBg = focused ? "#1a1a1a" : "#8a8480";
@@ -44,13 +42,15 @@ export default function OSWindow({
     <AnimatePresence>
       <motion.div
         drag
+        dragControls={dragControls}
+        dragListener={false}
         dragMomentum={false}
         dragElastic={0}
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.92 }}
         transition={{ duration: 0.12 }}
-        onMouseDown={onFocus}
+        onPointerDown={onFocus}
         style={{
           position: "absolute",
           top: defaultPosition.y,
@@ -70,6 +70,7 @@ export default function OSWindow({
       >
         {/* Title bar — drag handle */}
         <div
+          onPointerDown={(e) => dragControls.start(e)}
           style={{
             height: "32px",
             minHeight: "32px",
@@ -80,6 +81,7 @@ export default function OSWindow({
             padding: "0 0 0 10px",
             cursor: "move",
             flexShrink: 0,
+            touchAction: "none",
           }}
         >
           {/* Left: icon + title */}
@@ -152,7 +154,7 @@ export default function OSWindow({
             background: "var(--room-paper, #faf7f2)",
             userSelect: "text",
           }}
-          onMouseDown={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
         >
           {children}
         </div>
