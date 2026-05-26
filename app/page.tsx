@@ -5,6 +5,11 @@ import FocusTimer from "@/components/ui/FocusTimer";
 import OSWindow from "@/components/ui/OSWindow";
 import DesktopIconItem from "@/components/ui/DesktopIconItem";
 import OSTaskbar from "@/components/ui/OSTaskbar";
+import NotesApp from "@/components/ui/NotesApp";
+import BacklogApp from "@/components/ui/BacklogApp";
+import ScheduleApp from "@/components/ui/ScheduleApp";
+import SettingsApp from "@/components/ui/SettingsApp";
+import { WALLPAPER_STYLES, STORAGE_KEY, type WallpaperKey } from "@/components/ui/SettingsApp";
 
 /* ─────────────────────────────────────────────────────────────
    Types
@@ -30,7 +35,8 @@ const APP_ICONS = [
   { id: "now",      icon: "📺", label: "Now" },
   { id: "focus",    icon: "⏱", label: "Focus" },
   { id: "backlog",  icon: "📋", label: "Backlog" },
-  { id: "journal",  icon: "📓", label: "Journal" },
+  { id: "notes",    icon: "📓", label: "Notes" },
+  { id: "calendar", icon: "📅", label: "Schedule" },
   { id: "settings", icon: "⚙️",  label: "Settings" },
 ];
 
@@ -87,19 +93,31 @@ function makeWindows(vw: number): WindowState[] {
       focused: false,
       zIndex: 8,
       position: mobile ? { x: 8, y: 60 } : { x: 300, y: 100 },
-      width: W ?? 480,
+      width: W ?? 520,
       height: "auto",
     },
     {
-      id: "journal",
-      title: "Journal",
+      id: "notes",
+      title: "Notes",
       icon: "📓",
       open: false,
       minimized: false,
       focused: false,
       zIndex: 7,
       position: mobile ? { x: 8, y: 60 } : { x: 260, y: 120 },
-      width: W ?? 460,
+      width: W ?? 560,
+      height: "auto",
+    },
+    {
+      id: "calendar",
+      title: "Schedule",
+      icon: "📅",
+      open: false,
+      minimized: false,
+      focused: false,
+      zIndex: 6,
+      position: mobile ? { x: 8, y: 60 } : { x: 320, y: 60 },
+      width: W ?? 480,
       height: "auto",
     },
     {
@@ -109,7 +127,7 @@ function makeWindows(vw: number): WindowState[] {
       open: false,
       minimized: false,
       focused: false,
-      zIndex: 6,
+      zIndex: 5,
       position: mobile ? { x: 8, y: 60 } : { x: 280, y: 90 },
       width: W ?? 420,
       height: "auto",
@@ -118,53 +136,87 @@ function makeWindows(vw: number): WindowState[] {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   Window content: NOW
+   Window content: NOW — fetches from schedule API
 ───────────────────────────────────────────────────────────── */
-const QUEUE = [
-  { title: "Shetland S02E04", category: "Series", color: "#1d4ed8" },
-  { title: "Patlabor Vol. 2",  category: "Manga",  color: "#dc2626" },
-  { title: "Hokuto no Ken",    category: "Anime",  color: "#0d9488" },
-];
+interface ScheduleEntry {
+  id: string;
+  item_title?: string;
+  category?: string;
+  color?: string;
+  start_min: number;
+  end_min: number;
+}
+
+function minToTime(min: number) {
+  const h = Math.floor(min / 60).toString().padStart(2, "0");
+  const m = (min % 60).toString().padStart(2, "0");
+  return `${h}:${m}`;
+}
 
 function NowWindowContent() {
+  const [entries, setEntries] = useState<ScheduleEntry[]>([]);
+  const [now, setNow] = useState(new Date());
+
+  useEffect(() => {
+    const today = new Date().toISOString().split("T")[0];
+    fetch(`/api/schedule?date=${today}`)
+      .then((r) => r.json())
+      .then(setEntries)
+      .catch(() => {});
+    const tick = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(tick);
+  }, []);
+
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  const current = entries.find((e) => e.start_min <= nowMin && e.end_min > nowMin);
+  const upcoming = entries.filter((e) => e.start_min > nowMin).slice(0, 3);
+
   return (
     <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "14px" }}>
       <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#6b6560" }}>
         Now
       </div>
-      <div>
-        <div style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: "24px", fontWeight: 700, color: "#1a1a1a", lineHeight: 1.1 }}>
-          Final Fantasy X
-        </div>
-        <div style={{ fontSize: "13px", color: "#1a1a1a", opacity: 0.65, marginTop: "4px" }}>
-          🎮 Videojuegos · 90 min
-        </div>
-      </div>
-      <div>
-        <div style={{ height: "10px", background: "rgba(26,26,26,0.12)", border: "1.5px solid #1a1a1a", borderRadius: "2px", position: "relative", overflow: "hidden" }}>
-          <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: "40%", background: "#f5c800", borderRadius: "1px" }} />
-        </div>
-        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", fontFamily: "var(--font-jetbrains-mono), monospace", color: "#1a1a1a", opacity: 0.55, marginTop: "4px" }}>
-          <span>36:00</span><span>90:00</span>
-        </div>
-      </div>
-      <button
-        className="btn-brutal"
-        style={{ width: "100%", padding: "10px 0", background: "#f5c800", color: "#1a1a1a", fontSize: "13px", fontWeight: 700, fontFamily: "var(--font-space-grotesk), sans-serif", letterSpacing: "0.06em", textTransform: "uppercase", borderRadius: "2px", border: "2px solid #1a1a1a", cursor: "pointer" }}
-      >
-        Start session →
-      </button>
-      <div style={{ height: "1px", background: "#e8e2d5" }} />
-      <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-        <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#6b6560" }}>Up next</div>
-        {QUEUE.map((item) => (
-          <div key={item.title} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 10px", background: "#f0ebe0", border: "1.5px solid #1a1a1a", borderRadius: "2px" }}>
-            <div style={{ width: "7px", height: "7px", borderRadius: "50%", background: item.color, flexShrink: 0 }} />
-            <span style={{ fontSize: "13px", fontWeight: 500, color: "#1a1a1a", flex: 1 }}>{item.title}</span>
-            <span style={{ fontSize: "10px", fontWeight: 700, color: "#faf7f2", background: item.color, padding: "2px 7px", borderRadius: "2px", letterSpacing: "0.04em" }}>{item.category}</span>
+      {current ? (
+        <div>
+          <div style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: "24px", fontWeight: 700, color: "#1a1a1a", lineHeight: 1.1 }}>
+            {current.item_title}
           </div>
-        ))}
-      </div>
+          <div style={{ fontSize: "13px", color: "#1a1a1a", opacity: 0.65, marginTop: "4px" }}>
+            {current.category} · {minToTime(current.start_min)}–{minToTime(current.end_min)}
+          </div>
+          <div style={{ marginTop: "10px", height: "10px", background: "rgba(26,26,26,0.12)", border: "1.5px solid #1a1a1a", borderRadius: "2px", position: "relative", overflow: "hidden" }}>
+            <div style={{
+              position: "absolute", left: 0, top: 0, height: "100%",
+              width: `${Math.min(100, ((nowMin - current.start_min) / (current.end_min - current.start_min)) * 100)}%`,
+              background: current.color ?? "#f5c800", borderRadius: "1px",
+            }} />
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", fontFamily: "var(--font-jetbrains-mono), monospace", color: "#1a1a1a", opacity: 0.55, marginTop: "4px" }}>
+            <span>{minToTime(current.start_min)}</span><span>{minToTime(current.end_min)}</span>
+          </div>
+        </div>
+      ) : (
+        <div style={{ fontSize: "15px", color: "#6b6560", fontStyle: "italic" }}>Nothing scheduled right now.</div>
+      )}
+
+      {upcoming.length > 0 && (
+        <>
+          <div style={{ height: "1px", background: "#e8e2d5" }} />
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#6b6560" }}>Up next</div>
+            {upcoming.map((entry) => (
+              <div key={entry.id} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 10px", background: "#f0ebe0", border: "1.5px solid #1a1a1a", borderRadius: "2px" }}>
+                <div style={{ width: "7px", height: "7px", borderRadius: "50%", background: entry.color ?? "#6b6560", flexShrink: 0 }} />
+                <span style={{ fontSize: "13px", fontWeight: 500, color: "#1a1a1a", flex: 1 }}>{entry.item_title}</span>
+                <span style={{ fontSize: "10px", fontFamily: "var(--font-jetbrains-mono), monospace", color: "#6b6560" }}>{minToTime(entry.start_min)}</span>
+                {entry.category && (
+                  <span style={{ fontSize: "10px", fontWeight: 700, color: "#fff", background: entry.color ?? "#6b6560", padding: "2px 7px", borderRadius: "2px", letterSpacing: "0.04em" }}>{entry.category}</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -185,23 +237,15 @@ function HomeWindowContent({ onOpenWindow }: { onOpenWindow: (id: string) => voi
         </div>
         <div style={{ fontSize: "13px", color: "#6b6560", marginTop: "5px" }}>{today}</div>
       </div>
-      <div style={{ display: "flex", gap: "10px" }}>
-        <div style={{ flex: 1, padding: "12px", background: "#f0ebe0", border: "2px solid #1a1a1a", textAlign: "center" }}>
-          <div style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: "28px", fontWeight: 700, color: "#1a1a1a", lineHeight: 1 }}>12</div>
-          <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#6b6560", marginTop: "4px" }}>Day streak</div>
-        </div>
-        <div style={{ flex: 1, padding: "12px", background: "#f5c800", border: "2px solid #1a1a1a", textAlign: "center" }}>
-          <div style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: "28px", fontWeight: 700, color: "#1a1a1a", lineHeight: 1 }}>3/5</div>
-          <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#1a1a1a", marginTop: "4px" }}>Done today</div>
-        </div>
-      </div>
       <div>
         <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#6b6560", marginBottom: "8px" }}>Quick launch</div>
         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
           {[
-            { id: "now",    label: "📺 NOW — Final Fantasy X", desc: "Current activity" },
-            { id: "focus",  label: "⏱ Focus Timer",           desc: "Pomodoro session" },
-            { id: "backlog",label: "📋 Backlog",               desc: "Manage your queue" },
+            { id: "now",      label: "📺 NOW",         desc: "Current activity" },
+            { id: "focus",    label: "⏱ Focus Timer",  desc: "Pomodoro session" },
+            { id: "backlog",  label: "📋 Backlog",      desc: "Manage your queue" },
+            { id: "notes",    label: "📓 Notes",        desc: "Quick notes" },
+            { id: "calendar", label: "📅 Schedule",     desc: "Today's plan" },
           ].map((item) => (
             <button
               key={item.id}
@@ -220,15 +264,6 @@ function HomeWindowContent({ onOpenWindow }: { onOpenWindow: (id: string) => voi
   );
 }
 
-function PlaceholderWindowContent({ name }: { name: string }) {
-  return (
-    <div style={{ padding: "24px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "120px", gap: "8px" }}>
-      <div style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: "18px", fontWeight: 700, color: "#1a1a1a" }}>{name}</div>
-      <div style={{ fontSize: "13px", color: "#6b6560" }}>Coming soon.</div>
-    </div>
-  );
-}
-
 /* ─────────────────────────────────────────────────────────────
    Window content router
 ───────────────────────────────────────────────────────────── */
@@ -237,10 +272,11 @@ function WindowContent({ id, onOpenWindow }: { id: string; onOpenWindow: (id: st
     case "now":      return <NowWindowContent />;
     case "focus":    return <div style={{ padding: "16px" }}><FocusTimer compact={false} /></div>;
     case "home":     return <HomeWindowContent onOpenWindow={onOpenWindow} />;
-    case "backlog":  return <PlaceholderWindowContent name="Backlog" />;
-    case "journal":  return <PlaceholderWindowContent name="Journal" />;
-    case "settings": return <PlaceholderWindowContent name="Settings" />;
-    default:         return <PlaceholderWindowContent name={id} />;
+    case "backlog":  return <BacklogApp />;
+    case "notes":    return <NotesApp />;
+    case "calendar": return <ScheduleApp />;
+    case "settings": return <SettingsApp />;
+    default:         return <div style={{ padding: "24px", textAlign: "center", color: "#6b6560" }}>{id}</div>;
   }
 }
 
@@ -249,12 +285,7 @@ function WindowContent({ id, onOpenWindow }: { id: string; onOpenWindow: (id: st
 ───────────────────────────────────────────────────────────── */
 function MobileIconGrid({ onOpen }: { onOpen: (id: string) => void }) {
   return (
-    <div style={{
-      padding: "28px 20px",
-      display: "grid",
-      gridTemplateColumns: "repeat(4, 1fr)",
-      gap: "20px 8px",
-    }}>
+    <div style={{ padding: "28px 20px", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "20px 8px" }}>
       {APP_ICONS.map((item) => (
         <button
           key={item.id}
@@ -274,6 +305,18 @@ function MobileIconGrid({ onOpen }: { onOpen: (id: string) => void }) {
 }
 
 /* ─────────────────────────────────────────────────────────────
+   Wallpaper helpers
+───────────────────────────────────────────────────────────── */
+function getWallpaperStyle(key: WallpaperKey): React.CSSProperties {
+  const style = WALLPAPER_STYLES[key];
+  // Determine if it's a color or gradient/image
+  if (style.startsWith("#") || style.startsWith("rgb")) {
+    return { backgroundColor: style };
+  }
+  return { backgroundImage: style };
+}
+
+/* ─────────────────────────────────────────────────────────────
    Unified Desktop — works on all screen sizes
 ───────────────────────────────────────────────────────────── */
 function Desktop() {
@@ -282,14 +325,27 @@ function Desktop() {
   ));
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
   const [maxZ, setMaxZ] = useState(11);
+  const [wallpaper, setWallpaper] = useState<WallpaperKey>("gradient-dark");
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
   const isMobileRef = useRef(isMobile);
 
   useEffect(() => {
-    // Re-init windows if screen size changes between SSR and client
     const vw = window.innerWidth;
     isMobileRef.current = vw < 768;
     setWindows(makeWindows(vw));
+
+    // Load wallpaper
+    const saved = localStorage.getItem(STORAGE_KEY) as WallpaperKey | null;
+    if (saved && WALLPAPER_STYLES[saved]) setWallpaper(saved);
+
+    // Listen for wallpaper changes from SettingsApp
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY && e.newValue && WALLPAPER_STYLES[e.newValue as WallpaperKey]) {
+        setWallpaper(e.newValue as WallpaperKey);
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
   }, []);
 
   const focusWindow = useCallback((id: string) => {
@@ -335,12 +391,20 @@ function Desktop() {
   }, [openWindow, focusWindow]);
 
   const mobile = isMobileRef.current;
+  const bgStyle = getWallpaperStyle(wallpaper);
+
+  // For grid wallpaper, add grid lines via additional style
+  const gridOverlay = wallpaper === "grid" ? {
+    backgroundImage: "linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)",
+    backgroundSize: "40px 40px",
+  } : {};
 
   return (
     <div
       style={{
         position: "fixed", inset: 0, overflow: "hidden", paddingBottom: "36px",
-        background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 35%, #0f3460 65%, #1a1a2e 100%)",
+        ...bgStyle,
+        ...gridOverlay,
       }}
       onClick={() => setSelectedIcon(null)}
     >
