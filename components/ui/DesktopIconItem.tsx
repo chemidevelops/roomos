@@ -43,9 +43,11 @@ export default function DesktopIconItem({
       {/* Icon */}
       <div
         style={{
-          fontSize: "36px",
+          fontSize: "40px",
           lineHeight: 1,
-          filter: selected ? "drop-shadow(0 0 0 #1d4ed8)" : "none",
+          filter: selected
+            ? "drop-shadow(0 0 8px rgba(245,200,0,0.8))"
+            : "drop-shadow(0 2px 4px rgba(0,0,0,0.35))",
         }}
       >
         {icon}
@@ -57,15 +59,15 @@ export default function DesktopIconItem({
           fontFamily: "var(--font-space-grotesk), 'Space Grotesk', sans-serif",
           fontSize: "11px",
           fontWeight: 600,
-          color: selected ? "#ffffff" : "#1a1a1a",
-          background: selected ? "#1d4ed8" : "transparent",
-          padding: selected ? "1px 4px" : "1px 4px",
+          color: "#ffffff",
+          background: selected ? "rgba(245,200,0,0.85)" : "rgba(0,0,0,0.45)",
+          padding: "1px 5px",
+          borderRadius: "2px",
           textAlign: "center",
-          lineHeight: 1.3,
+          lineHeight: 1.4,
           maxWidth: "70px",
           wordBreak: "break-word",
-          // Text shadow for readability on dot pattern
-          textShadow: selected ? "none" : "0 1px 3px rgba(250,247,242,0.9), 0 -1px 3px rgba(250,247,242,0.9)",
+          backdropFilter: "blur(4px)",
         }}
       >
         {label}

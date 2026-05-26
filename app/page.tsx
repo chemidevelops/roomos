@@ -261,18 +261,10 @@ function MobileIconGrid({ onOpen }: { onOpen: (id: string) => void }) {
           onPointerDown={() => onOpen(item.id)}
           style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px", background: "transparent", border: "none", cursor: "pointer", padding: "4px", WebkitTapHighlightColor: "transparent" }}
         >
-          <div style={{
-            width: "52px", height: "52px",
-            background: "#faf7f2",
-            border: "2px solid #1a1a1a",
-            boxShadow: "2px 2px 0px #1a1a1a",
-            borderRadius: "4px",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: "24px",
-          }}>
+          <div style={{ fontSize: "36px", lineHeight: 1, filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.5))" }}>
             {item.icon}
           </div>
-          <span style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: "10px", fontWeight: 700, color: "#1a1a1a", letterSpacing: "0.03em", textTransform: "uppercase" }}>
+          <span style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: "10px", fontWeight: 600, color: "#fff", background: "rgba(0,0,0,0.45)", padding: "1px 5px", borderRadius: "2px", letterSpacing: "0.02em", backdropFilter: "blur(4px)" }}>
             {item.label}
           </span>
         </button>
@@ -346,8 +338,10 @@ function Desktop() {
 
   return (
     <div
-      className="desktop-pattern"
-      style={{ position: "fixed", inset: 0, background: "#f0ebe0", overflow: "hidden", paddingBottom: "36px" }}
+      style={{
+        position: "fixed", inset: 0, overflow: "hidden", paddingBottom: "36px",
+        background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 35%, #0f3460 65%, #1a1a2e 100%)",
+      }}
       onClick={() => setSelectedIcon(null)}
     >
       {/* Icons — column on desktop, grid on mobile */}
