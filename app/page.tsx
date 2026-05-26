@@ -5,7 +5,6 @@ import FocusTimer from "@/components/ui/FocusTimer";
 import OSWindow from "@/components/ui/OSWindow";
 import DesktopIconItem from "@/components/ui/DesktopIconItem";
 import OSTaskbar from "@/components/ui/OSTaskbar";
-import Card from "@/components/ui/Card";
 
 /* ─────────────────────────────────────────────────────────────
    Window state types
@@ -191,80 +190,132 @@ function PlaceholderWindowContent({ name }: { name: string }) {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   MOBILE — bottom tab bar + card layout
+   MOBILE — home screen with icons + full-screen windows
 ───────────────────────────────────────────────────────────── */
-const MOBILE_TABS = [
-  { id: "home",    icon: "🏠", label: "Home" },
-  { id: "now",     icon: "📺", label: "Now" },
-  { id: "focus",   icon: "⏱", label: "Focus" },
-  { id: "backlog", icon: "📋", label: "Backlog" },
-  { id: "journal", icon: "📓", label: "Journal" },
+const MOBILE_ICONS = [
+  { id: "home",     icon: "🏠", label: "Home" },
+  { id: "now",      icon: "📺", label: "Now" },
+  { id: "focus",    icon: "⏱", label: "Focus" },
+  { id: "backlog",  icon: "📋", label: "Backlog" },
+  { id: "journal",  icon: "📓", label: "Journal" },
+  { id: "settings", icon: "⚙️",  label: "Settings" },
 ];
 
+function MobileWindow({
+  id, title, icon, onClose, onOpenWindow,
+}: { id: string; title: string; icon: string; onClose: () => void; onOpenWindow: (id: string) => void }) {
+  return (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 100,
+      display: "flex", flexDirection: "column",
+      background: "#f0ebe0",
+      animation: "slideUp 0.22s cubic-bezier(0.32,0.72,0,1)",
+    }}>
+      {/* Title bar */}
+      <div style={{
+        height: "44px", flexShrink: 0,
+        background: "#1a1a1a",
+        display: "flex", alignItems: "center",
+        padding: "0 12px", gap: "10px",
+      }}>
+        <button
+          onClick={onClose}
+          style={{
+            width: "28px", height: "28px",
+            borderRadius: "2px", border: "2px solid #333",
+            background: "#dc2626", cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: "14px", color: "#fff", fontWeight: 700, flexShrink: 0,
+          }}
+        >×</button>
+        <span style={{ fontSize: "16px" }}>{icon}</span>
+        <span style={{
+          fontFamily: "var(--font-space-grotesk), sans-serif",
+          fontSize: "14px", fontWeight: 700,
+          color: "#faf7f2", letterSpacing: "0.04em",
+          flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+        }}>{title}</span>
+      </div>
+      {/* Content */}
+      <div style={{ flex: 1, overflowY: "auto" }}>
+        <WindowContent id={id} onOpenWindow={onOpenWindow} />
+      </div>
+      <style>{`
+        @keyframes slideUp {
+          from { transform: translateY(100%); }
+          to   { transform: translateY(0); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 function MobileView() {
-  const [activeTab, setActiveTab] = useState("home");
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
-  const today = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+  const [openApp, setOpenApp] = useState<string | null>(null);
+
+  const activeIcon = openApp ? MOBILE_ICONS.find(i => i.id === openApp) : null;
 
   return (
-    <div style={{ minHeight: "100dvh", background: "#f0ebe0", paddingBottom: "60px" }}>
-      {/* Simple top bar */}
-      <div style={{ height: "44px", background: "#faf7f2", borderBottom: "2px solid #1a1a1a", display: "flex", alignItems: "center", padding: "0 16px" }}>
-        <span style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: "14px", fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "#1a1a1a" }}>
-          rOS
+    <div className="desktop-pattern" style={{ minHeight: "100dvh", background: "#f0ebe0", position: "relative" }}>
+      {/* Status bar */}
+      <div style={{
+        height: "36px", background: "#1a1a1a",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "0 16px",
+      }}>
+        <span style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: "13px", fontWeight: 800, letterSpacing: "0.1em", color: "#f5c800" }}>rOS</span>
+        <span style={{ fontFamily: "var(--font-jetbrains-mono), monospace", fontSize: "12px", color: "rgba(255,255,255,0.6)" }}>
+          {new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })}
         </span>
       </div>
 
-      <div style={{ padding: "20px 16px", display: "flex", flexDirection: "column", gap: "16px" }}>
-        {activeTab === "home" && (
-          <>
-            <div>
-              <h1 style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: "26px", fontWeight: 700, color: "#1a1a1a", margin: 0 }}>{greeting}, Jose</h1>
-              <p style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: "13px", color: "#6b6560", margin: "5px 0 0" }}>{today}</p>
+      {/* Icon grid */}
+      <div style={{
+        padding: "32px 24px",
+        display: "grid",
+        gridTemplateColumns: "repeat(3, 1fr)",
+        gap: "24px 16px",
+      }}>
+        {MOBILE_ICONS.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => setOpenApp(item.id)}
+            style={{
+              display: "flex", flexDirection: "column", alignItems: "center", gap: "8px",
+              background: "transparent", border: "none", cursor: "pointer", padding: "4px",
+            }}
+          >
+            <div style={{
+              width: "64px", height: "64px",
+              background: "#faf7f2",
+              border: "2px solid #1a1a1a",
+              boxShadow: "3px 3px 0px #1a1a1a",
+              borderRadius: "4px",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: "28px",
+            }}>
+              {item.icon}
             </div>
-            <Card color="#f5c800">
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#1a1a1a" }}>Now</div>
-                <div style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: "22px", fontWeight: 700, color: "#1a1a1a" }}>Final Fantasy X</div>
-                <div style={{ fontSize: "13px", color: "#1a1a1a", opacity: 0.7 }}>🎮 Videojuegos · 90 min</div>
-                <div style={{ height: "8px", background: "rgba(26,26,26,0.15)", border: "1.5px solid #1a1a1a", borderRadius: "2px", position: "relative", overflow: "hidden" }}>
-                  <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: "40%", background: "#1a1a1a" }} />
-                </div>
-                <button className="btn-brutal" style={{ padding: "10px", background: "#1a1a1a", color: "#f5c800", fontSize: "13px", fontWeight: 700, fontFamily: "var(--font-space-grotesk), sans-serif", letterSpacing: "0.05em", textTransform: "uppercase", borderRadius: "2px", border: "2px solid #1a1a1a", cursor: "pointer" }}>
-                  Start session →
-                </button>
-              </div>
-            </Card>
-          </>
-        )}
-        {activeTab === "focus" && (
-          <Card><FocusTimer compact={false} /></Card>
-        )}
-        {activeTab === "now" && (
-          <Card color="#f5c800"><NowWindowContent /></Card>
-        )}
-        {(activeTab === "backlog" || activeTab === "journal") && (
-          <Card><PlaceholderWindowContent name={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} /></Card>
-        )}
+            <span style={{
+              fontFamily: "var(--font-space-grotesk), sans-serif",
+              fontSize: "11px", fontWeight: 700,
+              color: "#1a1a1a", letterSpacing: "0.04em",
+              textTransform: "uppercase",
+            }}>{item.label}</span>
+          </button>
+        ))}
       </div>
 
-      {/* Mobile bottom tabs */}
-      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, height: "56px", background: "#faf7f2", borderTop: "2px solid #1a1a1a", display: "flex", zIndex: 90 }}>
-        {MOBILE_TABS.map((tab) => {
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "2px", background: isActive ? "#f5c800" : "transparent", border: "none", borderTop: isActive ? "3px solid #1a1a1a" : "3px solid transparent", cursor: "pointer", fontFamily: "var(--font-space-grotesk), sans-serif" }}
-            >
-              <span style={{ fontSize: "18px", lineHeight: 1 }}>{tab.icon}</span>
-              <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#1a1a1a" }}>{tab.label}</span>
-            </button>
-          );
-        })}
-      </div>
+      {/* Full-screen window */}
+      {openApp && activeIcon && (
+        <MobileWindow
+          id={openApp}
+          title={activeIcon.label}
+          icon={activeIcon.icon}
+          onClose={() => setOpenApp(null)}
+          onOpenWindow={(id) => setOpenApp(id)}
+        />
+      )}
     </div>
   );
 }
