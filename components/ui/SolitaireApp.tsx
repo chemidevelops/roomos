@@ -258,8 +258,13 @@ export default function SolitaireApp() {
   /* Drop zone props — pile registers hover via pointer enter/leave */
   function dropZone(pileId: PileId) {
     return {
-      onPointerEnter: () => { if (dragRef.current) hoveredPileRef.current = pileId; },
-      onPointerLeave: () => { if (hoveredPileRef.current === pileId) hoveredPileRef.current = null; },
+      onPointerOver: (e: React.PointerEvent) => {
+        e.stopPropagation();
+        if (dragRef.current) hoveredPileRef.current = pileId;
+      },
+      onPointerLeave: () => {
+        if (hoveredPileRef.current === pileId) hoveredPileRef.current = null;
+      },
     };
   }
 
