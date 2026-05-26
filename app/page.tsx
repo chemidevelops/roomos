@@ -1,510 +1,508 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
-import Clock from "@/components/ui/Clock";
-import Widget from "@/components/ui/Widget";
-import AmbientBar from "@/components/ui/AmbientBar";
-import XMBDock from "@/components/ui/XMBDock";
-import BootSequence from "@/components/ui/BootSequence";
-import AmbientBackground from "@/components/ui/AmbientBackground";
+import { useState } from "react";
+import TopBar from "@/components/ui/TopBar";
+import Sidebar from "@/components/ui/Sidebar";
+import Card from "@/components/ui/Card";
+import FocusTimer from "@/components/ui/FocusTimer";
 
-/* ── helpers ── */
-function fadeUp(delay = 0) {
-  return {
-    initial: { opacity: 0, y: 12 },
-    animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] as const, delay },
-  };
-}
+/* ── HOME view ── */
+function HomeView() {
+  const hour = new Date().getHours();
+  const greeting =
+    hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const today = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
 
-/* ── Circular arc (Focus widget) ── */
-function CircularProgress({
-  value,
-  max,
-  size = 72,
-  label,
-  status,
-}: {
-  value: number;
-  max: number;
-  size?: number;
-  label: string;
-  status: string;
-}) {
-  const stroke = 2.5;
-  const r = (size - stroke * 2) / 2;
-  const circ = 2 * Math.PI * r;
-  const offset = circ - (value / max) * circ;
+  const QUEUE = [
+    { title: "Shetland S02E04", category: "Series", color: "#1d4ed8" },
+    { title: "Patlabor Vol. 2", category: "Manga", color: "#dc2626" },
+    { title: "Hokuto no Ken", category: "Anime", color: "#0d9488" },
+  ];
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "10px", alignItems: "center" }}>
-      <span
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "20px",
+      }}
+    >
+      {/* Greeting */}
+      <div>
+        <h1
+          style={{
+            fontFamily: "var(--font-space-grotesk), sans-serif",
+            fontSize: "clamp(24px, 4vw, 32px)",
+            fontWeight: 700,
+            color: "#1a1a1a",
+            margin: 0,
+            lineHeight: 1.1,
+          }}
+        >
+          {greeting}, Jose
+        </h1>
+        <p
+          style={{
+            fontFamily: "var(--font-space-grotesk), sans-serif",
+            fontSize: "14px",
+            color: "#6b6560",
+            margin: "6px 0 0",
+          }}
+        >
+          {today}
+        </p>
+      </div>
+
+      {/* 3-column grid (desktop), 1-col (mobile) */}
+      <div
         style={{
-          fontFamily: "var(--font-space-grotesk)",
-          fontSize: "10px",
-          fontWeight: 600,
-          letterSpacing: "0.1em",
-          textTransform: "uppercase",
-          color: "#7878a0",
-          alignSelf: "flex-start",
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+          gap: "16px",
         }}
       >
-        Focus
-      </span>
-
-      <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={r}
-            fill="none"
-            stroke="rgba(74,158,255,0.1)"
-            strokeWidth={stroke}
-          />
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={r}
-            fill="none"
-            stroke="#4a9eff"
-            strokeWidth={stroke}
-            strokeLinecap="round"
-            strokeDasharray={circ}
-            strokeDashoffset={offset}
-            style={{ filter: "drop-shadow(0 0 4px rgba(74,158,255,0.7))" }}
-          />
-        </svg>
-        <div
-          style={{
-            position: "absolute",
-            textAlign: "center",
-            pointerEvents: "none",
-          }}
+        {/* CARD 1: NOW — full width */}
+        <Card
+          color="#f5c800"
+          style={{ gridColumn: "1 / -1" }}
         >
           <div
             style={{
-              fontFamily: "var(--font-jetbrains-mono)",
-              fontSize: "14px",
-              fontWeight: 400,
-              color: "#e8e8f2",
-              letterSpacing: "-0.02em",
-              textShadow: "0 0 12px rgba(74,158,255,0.5)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "12px",
             }}
           >
-            {label}
-          </div>
-        </div>
-      </div>
+            <div
+              style={{
+                fontSize: "10px",
+                fontWeight: 700,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                color: "#1a1a1a",
+              }}
+            >
+              Now
+            </div>
+            <div
+              style={{
+                fontSize: "clamp(22px, 3vw, 28px)",
+                fontWeight: 700,
+                color: "#1a1a1a",
+                fontFamily: "var(--font-space-grotesk), sans-serif",
+                lineHeight: 1.1,
+              }}
+            >
+              Final Fantasy X
+            </div>
+            <div style={{ fontSize: "14px", color: "#1a1a1a", opacity: 0.7 }}>
+              Videojuegos · 90 min
+            </div>
 
-      <span
-        style={{
-          fontFamily: "var(--font-space-grotesk)",
-          fontSize: "10px",
-          color: "#7878a0",
-          textAlign: "center",
-        }}
-      >
-        {status}
-      </span>
+            {/* Progress bar */}
+            <div
+              style={{
+                height: "8px",
+                background: "rgba(26,26,26,0.15)",
+                border: "1.5px solid #1a1a1a",
+                borderRadius: "2px",
+                position: "relative",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  top: 0,
+                  height: "100%",
+                  width: "60%",
+                  background: "#1a1a1a",
+                  borderRadius: "1px",
+                }}
+              />
+            </div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontSize: "11px",
+                fontFamily: "var(--font-jetbrains-mono), monospace",
+                color: "#1a1a1a",
+                opacity: 0.6,
+              }}
+            >
+              <span>54:00</span>
+              <span>90:00</span>
+            </div>
+
+            {/* Button */}
+            <button
+              className="btn-brutal"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "10px 20px",
+                background: "#1a1a1a",
+                color: "#f5c800",
+                fontSize: "13px",
+                fontWeight: 700,
+                fontFamily: "var(--font-space-grotesk), sans-serif",
+                borderRadius: "2px",
+                letterSpacing: "0.04em",
+                textTransform: "uppercase",
+                width: "fit-content",
+              }}
+            >
+              Start session →
+            </button>
+          </div>
+        </Card>
+
+        {/* CARD 2: FOCUS TIMER — half width */}
+        <Card>
+          <FocusTimer compact />
+        </Card>
+
+        {/* CARD 3: STREAK — half width */}
+        <Card>
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div
+              style={{
+                fontSize: "10px",
+                fontWeight: 700,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                color: "#6b6560",
+              }}
+            >
+              Streak
+            </div>
+            <div
+              style={{
+                fontSize: "72px",
+                fontWeight: 700,
+                color: "#1a1a1a",
+                lineHeight: 1,
+                letterSpacing: "-0.04em",
+                fontFamily: "var(--font-space-grotesk), sans-serif",
+              }}
+            >
+              12
+            </div>
+            <div style={{ fontSize: "14px", color: "#6b6560", fontWeight: 500 }}>
+              days
+            </div>
+
+            {/* Week dots */}
+            <div style={{ display: "flex", gap: "6px", marginTop: "4px" }}>
+              {Array.from({ length: 7 }).map((_, i) => (
+                <div
+                  key={i}
+                  title={["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][i]}
+                  style={{
+                    flex: 1,
+                    height: "10px",
+                    borderRadius: "2px",
+                    background: i < 5 ? "#1a1a1a" : "#e8e2d5",
+                    border: "1.5px solid #1a1a1a",
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        </Card>
+
+        {/* CARD 4: QUEUE — full width */}
+        <Card style={{ gridColumn: "1 / -1" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "10px",
+                  fontWeight: 700,
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  color: "#6b6560",
+                }}
+              >
+                Queue
+              </div>
+              <button
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  color: "#1a1a1a",
+                  fontFamily: "var(--font-space-grotesk), sans-serif",
+                  padding: 0,
+                  textDecoration: "underline",
+                  textUnderlineOffset: "3px",
+                }}
+              >
+                View all →
+              </button>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              {QUEUE.map((item) => (
+                <div
+                  key={item.title}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    padding: "10px 12px",
+                    background: "#f0ebe0",
+                    border: "1.5px solid #1a1a1a",
+                    borderRadius: "2px",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "8px",
+                      height: "8px",
+                      borderRadius: "50%",
+                      background: item.color,
+                      flexShrink: 0,
+                    }}
+                  />
+                  <span
+                    style={{
+                      fontSize: "14px",
+                      fontWeight: 500,
+                      color: "#1a1a1a",
+                      flex: 1,
+                    }}
+                  >
+                    {item.title}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: "11px",
+                      fontWeight: 700,
+                      color: "#faf7f2",
+                      background: item.color,
+                      padding: "2px 8px",
+                      borderRadius: "2px",
+                      letterSpacing: "0.05em",
+                    }}
+                  >
+                    {item.category}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }
 
-/* ── Status bar live clock ── */
-function StatusClock() {
-  const [label, setLabel] = useState("--:--");
-
-  useEffect(() => {
-    const tick = () => {
-      const now = new Date();
-      setLabel(
-        now.toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-        })
-      );
-    };
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, []);
-
+/* ── FOCUS view ── */
+function FocusView() {
   return (
-    <span
+    <div
       style={{
-        fontFamily: "var(--font-jetbrains-mono), monospace",
-        fontSize: "11px",
-        color: "rgba(255,255,255,0.3)",
-        letterSpacing: "0.06em",
-        fontWeight: 400,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        minHeight: "60vh",
+        gap: "0",
       }}
     >
-      {label}
-    </span>
+      <div
+        style={{
+          width: "100%",
+          maxWidth: "480px",
+        }}
+      >
+        <Card color="#faf7f2">
+          <FocusTimer compact={false} />
+        </Card>
+      </div>
+    </div>
   );
 }
 
-/* ── Page ── */
-export default function Home() {
-  const [booting, setBooting] = useState(true);
-  const [ready, setReady] = useState(false);
-
-  const handleBootComplete = useCallback(() => {
-    setBooting(false);
-    setReady(true);
-  }, []);
-
+/* ── PLACEHOLDER view ── */
+function PlaceholderView({ name }: { name: string }) {
   return (
-    <>
-      {/* Boot sequence */}
-      {booting && <BootSequence onComplete={handleBootComplete} />}
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "16px",
+      }}
+    >
+      <h2
+        style={{
+          fontFamily: "var(--font-space-grotesk), sans-serif",
+          fontSize: "28px",
+          fontWeight: 700,
+          color: "#1a1a1a",
+          margin: 0,
+        }}
+      >
+        {name}
+      </h2>
+      <Card>
+        <p style={{ color: "#6b6560", fontWeight: 500, margin: 0 }}>
+          {name} view coming soon.
+        </p>
+      </Card>
+    </div>
+  );
+}
 
-      {/* Main OS */}
-      {ready && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="grain"
-          style={{
-            minHeight: "100dvh",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            overflowY: "auto",
-            overflowX: "hidden",
-            position: "relative",
-          }}
-        >
-          {/* Ambient background */}
-          <AmbientBackground />
+/* ── MOBILE bottom tab bar ── */
+const TABS = [
+  { id: "home",    icon: "⌂",  label: "Home" },
+  { id: "focus",   icon: "◎",  label: "Focus" },
+  { id: "backlog", icon: "≡",  label: "Backlog" },
+  { id: "journal", icon: "✎",  label: "Journal" },
+  { id: "music",   icon: "♪",  label: "Music" },
+];
 
-          {/* STATUS BAR */}
-          <div
+function BottomTabBar({ activeView, onSelect }: { activeView: string; onSelect: (v: string) => void }) {
+  return (
+    <div
+      style={{
+        position: "fixed",
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: "56px",
+        background: "#faf7f2",
+        borderTop: "2px solid #1a1a1a",
+        display: "flex",
+        zIndex: 90,
+      }}
+      className="bottom-tabs-mobile"
+    >
+      {TABS.map((tab) => {
+        const isActive = activeView === tab.id;
+        return (
+          <button
+            key={tab.id}
+            onClick={() => onSelect(tab.id)}
             style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              right: 0,
-              height: "44px",
-              zIndex: 10,
-              background: "rgba(8,8,16,0.7)",
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)",
-              borderBottom: "1px solid rgba(255,255,255,0.04)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "0 20px",
-            }}
-          >
-            <span
-              style={{
-                fontFamily: "var(--font-space-grotesk), sans-serif",
-                fontSize: "10px",
-                fontWeight: 500,
-                letterSpacing: "0.25em",
-                textTransform: "uppercase",
-                color: "rgba(255,255,255,0.25)",
-              }}
-            >
-              roomOS
-            </span>
-            <StatusClock />
-          </div>
-
-          {/* Scrollable content */}
-          <main
-            style={{
-              width: "100%",
-              maxWidth: "390px",
-              minHeight: "100dvh",
+              flex: 1,
               display: "flex",
               flexDirection: "column",
-              padding: "80px 16px 120px",
-              position: "relative",
-              zIndex: 1,
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "2px",
+              background: isActive ? "#f5c800" : "transparent",
+              border: "none",
+              borderTop: isActive ? "3px solid #1a1a1a" : "3px solid transparent",
+              cursor: "pointer",
+              fontFamily: "var(--font-space-grotesk), sans-serif",
             }}
           >
-            {/* HERO CLOCK */}
-            <motion.div
-              {...fadeUp(0)}
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                paddingTop: "16px",
-                paddingBottom: "40px",
-              }}
-            >
-              <Clock />
-            </motion.div>
+            <span style={{ fontSize: "18px", lineHeight: 1 }}>{tab.icon}</span>
+            <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#1a1a1a" }}>
+              {tab.label}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
-            {/* AMBIENT NOW PLAYING */}
-            <motion.div {...fadeUp(0.15)} style={{ marginBottom: "20px" }}>
-              <AmbientBar artist="Bonobo" track="Kong" />
-            </motion.div>
+/* ── PAGE ── */
+export default function Home() {
+  const [activeView, setActiveView] = useState("home");
 
-            {/* WIDGET GRID */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: "10px",
-              }}
-            >
-              {/* WIDGET 1: Now — full width */}
-              <motion.div {...fadeUp(0.25)} style={{ gridColumn: "1 / -1" }}>
-                <Widget
-                  glow="blue"
-                  size="lg"
-                  layoutId="widget-now"
-                  expandedContent={
-                    <div style={{ padding: "8px 0" }}>
-                      <div style={{ fontFamily: "var(--font-space-grotesk)", fontSize: "10px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#7878a0", marginBottom: "20px" }}>
-                        Ahora
-                      </div>
-                      <div style={{ fontFamily: "var(--font-space-grotesk)", fontSize: "28px", fontWeight: 300, color: "#e8e8f2" }}>
-                        Final Fantasy X
-                      </div>
-                      <div style={{ fontFamily: "var(--font-space-grotesk)", fontSize: "14px", color: "#7878a0", marginTop: "8px" }}>
-                        Videojuegos · 90 min restantes
-                      </div>
-                      <div style={{ marginTop: "32px", height: "2px", background: "rgba(74,158,255,0.1)", borderRadius: "1px", position: "relative" }}>
-                        <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: "60%", background: "#4a9eff", borderRadius: "1px", boxShadow: "0 0 8px rgba(74,158,255,0.6)" }} />
-                      </div>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginTop: "8px" }}>
-                        <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: "10px", color: "#404060" }}>54:00</span>
-                        <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: "10px", color: "#404060" }}>90:00</span>
-                      </div>
-                    </div>
-                  }
-                >
-                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                    <span style={{ fontFamily: "var(--font-space-grotesk)", fontSize: "10px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#7878a0" }}>
-                      Ahora
-                    </span>
+  function renderView() {
+    switch (activeView) {
+      case "home":    return <HomeView />;
+      case "focus":   return <FocusView />;
+      case "backlog": return <PlaceholderView name="Backlog" />;
+      case "journal": return <PlaceholderView name="Journal" />;
+      case "music":   return <PlaceholderView name="Music" />;
+      case "settings":return <PlaceholderView name="Settings" />;
+      default:        return <HomeView />;
+    }
+  }
 
-                    <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-                      {/* Activity icon */}
-                      <div
-                        style={{
-                          width: "48px",
-                          height: "48px",
-                          borderRadius: "14px",
-                          background: "rgba(74,158,255,0.1)",
-                          border: "1px solid rgba(74,158,255,0.15)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: "22px",
-                          flexShrink: 0,
-                          boxShadow: "0 0 20px rgba(74,158,255,0.15)",
-                        }}
-                      >
-                        🎮
-                      </div>
-                      <div>
-                        <div
-                          style={{
-                            fontFamily: "var(--font-space-grotesk)",
-                            fontSize: "16px",
-                            fontWeight: 500,
-                            color: "#e8e8f2",
-                            lineHeight: 1.2,
-                            textShadow: "0 0 20px rgba(74,158,255,0.2)",
-                          }}
-                        >
-                          Final Fantasy X
-                        </div>
-                        <div
-                          style={{
-                            fontFamily: "var(--font-space-grotesk)",
-                            fontSize: "12px",
-                            color: "#7878a0",
-                            marginTop: "3px",
-                          }}
-                        >
-                          Videojuegos · 90 min restantes
-                        </div>
-                      </div>
-                    </div>
+  return (
+    <div
+      className="desktop-pattern"
+      style={{
+        minHeight: "100dvh",
+        background: "#f0ebe0",
+        position: "relative",
+      }}
+    >
+      {/* Top bar — always visible */}
+      <TopBar activeView={activeView} />
 
-                    {/* Progress bar */}
-                    <div
-                      style={{
-                        height: "2px",
-                        background: "rgba(74,158,255,0.1)",
-                        borderRadius: "1px",
-                        position: "relative",
-                        overflow: "hidden",
-                      }}
-                    >
-                      <div
-                        style={{
-                          position: "absolute",
-                          left: 0,
-                          top: 0,
-                          height: "100%",
-                          width: "60%",
-                          background: "#4a9eff",
-                          borderRadius: "1px",
-                          boxShadow: "0 0 6px rgba(74,158,255,0.7)",
-                        }}
-                      />
-                    </div>
-                  </div>
-                </Widget>
-              </motion.div>
+      {/* Sidebar — desktop only */}
+      <Sidebar activeView={activeView} onSelect={setActiveView} />
 
-              {/* WIDGET 2: Focus — half width */}
-              <motion.div {...fadeUp(0.35)}>
-                <Widget glow="blue" size="sm" layoutId="widget-focus">
-                  <CircularProgress value={0} max={25} size={72} label="25:00" status="Ready" />
-                </Widget>
-              </motion.div>
+      {/* Main content */}
+      <main
+        style={{
+          marginTop: "36px",
+          marginLeft: 0,
+          minHeight: "calc(100dvh - 36px)",
+          overflowY: "auto",
+          padding: "24px 20px 80px",
+        }}
+        /* Tailwind can't handle this dynamic, so we use a style tag approach inline */
+      >
+        {/* Spacer for sidebar on desktop */}
+        <div
+          style={{
+            maxWidth: "960px",
+          }}
+          className="main-inner"
+        >
+          {renderView()}
+        </div>
+      </main>
 
-              {/* WIDGET 3: Streak — half width */}
-              <motion.div {...fadeUp(0.4)}>
-                <Widget glow="gold" size="sm" layoutId="widget-streak">
-                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                    <span style={{ fontFamily: "var(--font-space-grotesk)", fontSize: "10px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#7878a0" }}>
-                      Streak
-                    </span>
+      {/* Mobile bottom tabs */}
+      <BottomTabBar activeView={activeView} onSelect={setActiveView} />
 
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                      <span style={{ fontSize: "24px", lineHeight: 1 }}>🔥</span>
-                      <div>
-                        <div
-                          style={{
-                            fontFamily: "var(--font-space-grotesk)",
-                            fontSize: "32px",
-                            fontWeight: 600,
-                            color: "#c8a96e",
-                            lineHeight: 1,
-                            letterSpacing: "-0.03em",
-                            textShadow: "0 0 20px rgba(200,169,110,0.4)",
-                          }}
-                        >
-                          12
-                        </div>
-                        <div
-                          style={{
-                            fontFamily: "var(--font-space-grotesk)",
-                            fontSize: "10px",
-                            color: "#7878a0",
-                            marginTop: "2px",
-                          }}
-                        >
-                          días seguidos
-                        </div>
-                      </div>
-                    </div>
-
-                    <div style={{ display: "flex", gap: "3px" }}>
-                      {Array.from({ length: 7 }).map((_, i) => (
-                        <div
-                          key={i}
-                          style={{
-                            flex: 1,
-                            height: "3px",
-                            borderRadius: "2px",
-                            background: i < 5 ? "#c8a96e" : "rgba(200,169,110,0.12)",
-                            boxShadow: i < 5 ? "0 0 5px rgba(200,169,110,0.5)" : "none",
-                          }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </Widget>
-              </motion.div>
-
-              {/* WIDGET 4: Media — full width */}
-              <motion.div {...fadeUp(0.45)} style={{ gridColumn: "1 / -1" }}>
-                <Widget glow="none" size="lg" layoutId="widget-media">
-                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                    <span style={{ fontFamily: "var(--font-space-grotesk)", fontSize: "10px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#7878a0" }}>
-                      Media
-                    </span>
-
-                    <div style={{ display: "flex", gap: "8px", overflowX: "auto" }}>
-                      {/* Series pill */}
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
-                          background: "rgba(255,255,255,0.04)",
-                          border: "1px solid rgba(255,255,255,0.06)",
-                          borderRadius: "12px",
-                          padding: "8px 12px",
-                          flexShrink: 0,
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: "6px",
-                            height: "6px",
-                            borderRadius: "50%",
-                            background: "#4a9eff",
-                            boxShadow: "0 0 6px rgba(74,158,255,0.8)",
-                          }}
-                        />
-                        <div>
-                          <div style={{ fontFamily: "var(--font-space-grotesk)", fontSize: "12px", fontWeight: 500, color: "#e8e8f2" }}>
-                            Shetland
-                          </div>
-                          <div style={{ fontFamily: "var(--font-space-grotesk)", fontSize: "10px", color: "#7878a0" }}>
-                            S02E04 · Serie
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Manga pill */}
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
-                          background: "rgba(255,255,255,0.04)",
-                          border: "1px solid rgba(255,255,255,0.06)",
-                          borderRadius: "12px",
-                          padding: "8px 12px",
-                          flexShrink: 0,
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: "6px",
-                            height: "6px",
-                            borderRadius: "50%",
-                            background: "#c8a96e",
-                            boxShadow: "0 0 6px rgba(200,169,110,0.8)",
-                          }}
-                        />
-                        <div>
-                          <div style={{ fontFamily: "var(--font-space-grotesk)", fontSize: "12px", fontWeight: 500, color: "#e8e8f2" }}>
-                            Patlabor Vol.2
-                          </div>
-                          <div style={{ fontFamily: "var(--font-space-grotesk)", fontSize: "10px", color: "#7878a0" }}>
-                            Manga
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </Widget>
-              </motion.div>
-            </div>
-          </main>
-
-          {/* XMB DOCK */}
-          <XMBDock />
-        </motion.div>
-      )}
-    </>
+      {/* Inline responsive styles */}
+      <style>{`
+        @media (min-width: 768px) {
+          main {
+            margin-left: 200px !important;
+            padding-bottom: 24px !important;
+          }
+          .bottom-tabs-mobile {
+            display: none !important;
+          }
+          .sidebar-desktop {
+            display: flex !important;
+          }
+        }
+        @media (max-width: 767px) {
+          .sidebar-desktop {
+            display: none !important;
+          }
+        }
+      `}</style>
+    </div>
   );
 }
