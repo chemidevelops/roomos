@@ -7,11 +7,40 @@ interface Line {
   text: string;
 }
 
+interface TerminalAppProps {
+  onOpenApp?: (id: string) => void;
+}
+
 const BOOT_LINES: Line[] = [
   { type: "output", text: "roomOS Terminal [Version 0.1.0]" },
   { type: "output", text: "(C) 2026 roomOS. All rights reserved." },
   { type: "output", text: "" },
 ];
+
+const APP_MAP: Record<string, string> = {
+  solitaire: "solitaire",
+  notas: "notes",
+  notes: "notes",
+  backlog: "backlog",
+  schedule: "calendar",
+  calendario: "calendar",
+  settings: "settings",
+  calc: "calculator",
+  calculadora: "calculator",
+  focus: "focus",
+  timer: "focus",
+};
+
+const VALID_CATEGORIES = ["videojuegos", "series", "anime", "manga", "libros", "revistas", "podcasts"];
+
+function randomMatrixLine(): string {
+  const len = 60 + Math.floor(Math.random() * 20);
+  let line = "";
+  for (let i = 0; i < len; i++) {
+    line += Math.random() > 0.5 ? "1" : "0";
+  }
+  return line;
+}
 
 function processCommand(cmd: string): string[] {
   const trimmed = cmd.trim();
@@ -22,16 +51,22 @@ function processCommand(cmd: string): string[] {
   if (lower === "help") {
     return [
       "Available commands:",
-      "  help      — list available commands",
-      "  date      — current date and time",
-      "  time      — current time HH:MM:SS",
-      "  cls/clear — clear the screen",
-      "  echo      — print text",
-      "  whoami    — print current user",
-      "  sysinfo   — system information",
-      "  ls/dir    — directory listing",
-      "  ver       — OS version",
-      "  matrix    — ???",
+      "  help                    — list available commands",
+      "  date                    — current date and time",
+      "  time                    — current time HH:MM:SS",
+      "  cls/clear               — clear the screen",
+      "  echo                    — print text",
+      "  whoami                  — print current user",
+      "  sysinfo                 — system information",
+      "  ls/dir                  — directory listing",
+      "  ver                     — OS version",
+      "  matrix                  — ???",
+      "  open <app>              — open an app",
+      '  add <cat> "<title>"     — add item to backlog',
+      '  note "<text>"           — save a quick note',
+      "  today                   — show today's schedule",
+      "  streak                  — show habit streak",
+      "  done                    — count done activities today",
     ];
   }
 
@@ -92,6 +127,47 @@ function processCommand(cmd: string): string[] {
     return ["__MATRIX__"];
   }
 
+  if (verb === "open") {
+    const appName = parts.slice(1).join(" ").toLowerCase();
+    if (!appName) return ["Usage: open <app>"];
+    const id = APP_MAP[appName];
+    if (id) {
+      return [`__OPEN__:${id}:Opening ${appName}...`];
+    }
+    return [`Unknown app: ${appName}`];
+  }
+
+  if (verb === "add") {
+    // add <category> "<title>"
+    const rest = trimmed.slice(verb.length).trim();
+    const catMatch = rest.match(/^(\S+)\s+"(.+)"$/);
+    if (!catMatch) return ['Usage: add <category> "<title>"'];
+    const category = catMatch[1].toLowerCase();
+    const title = catMatch[2];
+    if (!VALID_CATEGORIES.includes(category)) {
+      return [`Unknown category: ${category}`, `Valid: ${VALID_CATEGORIES.join(", ")}`];
+    }
+    return [`__ADD__:${category}:${title}`];
+  }
+
+  if (verb === "note") {
+    const noteMatch = trimmed.slice(verb.length).trim().match(/^"(.+)"$/);
+    if (!noteMatch) return ['Usage: note "<text>"'];
+    return [`__NOTE__:${noteMatch[1]}`];
+  }
+
+  if (lower === "today") {
+    return ["__TODAY__"];
+  }
+
+  if (lower === "streak") {
+    return ["Streak: checking...", "Feature coming soon."];
+  }
+
+  if (lower === "done") {
+    return ["__DONE__"];
+  }
+
   if (trimmed === "") {
     return [];
   }
@@ -99,16 +175,7 @@ function processCommand(cmd: string): string[] {
   return [`'${parts[0]}' is not recognized as an internal or external command,`, "operable program or batch file."];
 }
 
-function randomMatrixLine(): string {
-  const len = 60 + Math.floor(Math.random() * 20);
-  let line = "";
-  for (let i = 0; i < len; i++) {
-    line += Math.random() > 0.5 ? "1" : "0";
-  }
-  return line;
-}
-
-export default function TerminalApp() {
+export default function TerminalApp({ onOpenApp = () => {} }: TerminalAppProps) {
   const [lines, setLines] = useState<Line[]>(BOOT_LINES);
   const [input, setInput] = useState("");
   const [matrixRunning, setMatrixRunning] = useState(false);
@@ -143,6 +210,126 @@ export default function TerminalApp() {
     }, 50);
   }, []);
 
+  const appendLines = useCallback((newLines: string[]) => {
+    setLines((prev) => [...prev, ...newLines.map((t) => ({ type: "output" as const, text: t }))]);
+  }, []);
+
+  const handleAsyncCommand = useCallback(async (result: string[], inputLine: Line) => {
+    const first = result[0];
+
+    // Open app
+    if (first?.startsWith("__OPEN__:")) {
+      const [, id, msg] = first.split(":") as [string, string, string];
+      setLines((prev) => [...prev, inputLine, { type: "output", text: msg }]);
+      onOpenApp(id);
+      return;
+    }
+
+    // Add to backlog
+    if (first?.startsWith("__ADD__:")) {
+      const parts = first.split(":");
+      const category = parts[1];
+      const title = parts.slice(2).join(":");
+      setLines((prev) => [...prev, inputLine, { type: "output", text: `Adding '${title}' to ${category}...` }]);
+      try {
+        const res = await fetch("/api/backlog", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title, category }),
+        });
+        if (res.ok) {
+          appendLines([`Added '${title}' to ${category}.`]);
+        } else {
+          const err = await res.json().catch(() => ({}));
+          appendLines([`Error: ${err?.error ?? res.statusText}`]);
+        }
+      } catch {
+        appendLines(["Error: network failure."]);
+      }
+      return;
+    }
+
+    // Save note
+    if (first?.startsWith("__NOTE__:")) {
+      const text = first.slice("__NOTE__:".length);
+      setLines((prev) => [...prev, inputLine, { type: "output", text: "Saving note..." }]);
+      try {
+        const res = await fetch("/api/notes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title: text.slice(0, 40), content: text }),
+        });
+        if (res.ok) {
+          appendLines(["Note saved."]);
+        } else {
+          const err = await res.json().catch(() => ({}));
+          appendLines([`Error: ${err?.error ?? res.statusText}`]);
+        }
+      } catch {
+        appendLines(["Error: network failure."]);
+      }
+      return;
+    }
+
+    // Today's schedule
+    if (first === "__TODAY__") {
+      setLines((prev) => [...prev, inputLine]);
+      try {
+        const today = new Date().toISOString().split("T")[0];
+        const res = await fetch(`/api/schedule?date=${today}`);
+        if (res.ok) {
+          const data = await res.json();
+          const entries: Array<{ start_min: number; end_min: number; title: string; category?: string }> =
+            Array.isArray(data) ? data : (data.entries ?? []);
+          if (entries.length === 0) {
+            appendLines(["No activities scheduled today."]);
+          } else {
+            const formatted = entries.map((e) => {
+              const sh = Math.floor(e.start_min / 60).toString().padStart(2, "0");
+              const sm = (e.start_min % 60).toString().padStart(2, "0");
+              const eh = Math.floor(e.end_min / 60).toString().padStart(2, "0");
+              const em = (e.end_min % 60).toString().padStart(2, "0");
+              const cat = e.category ? ` [${e.category}]` : "";
+              return `${sh}:${sm}-${eh}:${em}  ${e.title}${cat}`;
+            });
+            appendLines(formatted);
+          }
+        } else {
+          appendLines(["Error fetching schedule."]);
+        }
+      } catch {
+        appendLines(["Error: network failure."]);
+      }
+      return;
+    }
+
+    // Done count
+    if (first === "__DONE__") {
+      setLines((prev) => [...prev, inputLine]);
+      try {
+        const today = new Date().toISOString().split("T")[0];
+        const res = await fetch(`/api/schedule?date=${today}`);
+        if (res.ok) {
+          const data = await res.json();
+          const entries: Array<{ end_min: number }> = Array.isArray(data) ? data : (data.entries ?? []);
+          const now = new Date();
+          const currentMinute = now.getHours() * 60 + now.getMinutes();
+          const doneCount = entries.filter((e) => e.end_min < currentMinute).length;
+          appendLines([`Done today: ${doneCount} activities.`]);
+        } else {
+          appendLines(["Error fetching schedule."]);
+        }
+      } catch {
+        appendLines(["Error: network failure."]);
+      }
+      return;
+    }
+
+    // Default sync output
+    const outputLines: Line[] = result.map((t) => ({ type: "output" as const, text: t }));
+    setLines((prev) => [...prev, inputLine, ...outputLines]);
+  }, [onOpenApp, appendLines]);
+
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     if (matrixRunning) return;
@@ -165,10 +352,9 @@ export default function TerminalApp() {
       return;
     }
 
-    const outputLines: Line[] = result.map((t) => ({ type: "output" as const, text: t }));
-    setLines((prev) => [...prev, inputLine, ...outputLines]);
     setInput("");
-  }, [input, matrixRunning, runMatrix]);
+    handleAsyncCommand(result, inputLine);
+  }, [input, matrixRunning, runMatrix, handleAsyncCommand]);
 
   return (
     <div
@@ -204,7 +390,7 @@ export default function TerminalApp() {
               wordBreak: "break-all",
             }}
           >
-            {line.text || " "}
+            {line.text || " "}
           </div>
         ))}
         <div ref={bottomRef} />

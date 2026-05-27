@@ -15,6 +15,7 @@ interface OSTaskbarProps {
   windows: TaskbarWindow[];
   onWindowClick: (id: string) => void;
   onLauncherClick: () => void;
+  onNewSticky?: () => void;
 }
 
 function TaskbarClock() {
@@ -53,6 +54,7 @@ export default function OSTaskbar({
   windows,
   onWindowClick,
   onLauncherClick,
+  onNewSticky,
 }: OSTaskbarProps) {
   const openWindows = windows.filter((w) => w.open);
 
@@ -108,6 +110,33 @@ export default function OSTaskbar({
       >
         rOS
       </button>
+
+
+
+      {/* Sticky button */}
+      {onNewSticky && (
+        <button
+          onClick={onNewSticky}
+          title="New sticky note"
+          style={{
+            width: "26px",
+            height: "26px",
+            background: "transparent",
+            border: "1.5px solid #444444",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "14px",
+            flexShrink: 0,
+            borderRadius: 0,
+          }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#2d2d2d"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
+        >
+          📌
+        </button>
+      )}
 
       {/* Divider */}
       <div

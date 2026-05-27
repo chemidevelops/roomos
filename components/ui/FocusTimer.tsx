@@ -19,26 +19,63 @@ export default function FocusTimer({ compact = false }: FocusTimerProps) {
   const [done, setDone] = useState(false);
   const [sessions, setSessions] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const endTimeRef = useRef<number | null>(null);
+
+  // Recompute remaining from endTime (used on visibility change)
+  const syncFromEndTime = () => {
+    if (endTimeRef.current === null) return;
+    const rem = Math.round((endTimeRef.current - Date.now()) / 1000);
+    if (rem <= 0) {
+      endTimeRef.current = null;
+      setRunning(false);
+      setDone(true);
+      setSessions((s) => s + 1);
+      setRemaining(0);
+    } else {
+      setRemaining(rem);
+    }
+  };
 
   useEffect(() => {
     if (running) {
+      // Set endTime based on current remaining
+      endTimeRef.current = Date.now() + remaining * 1000;
+
       intervalRef.current = setInterval(() => {
-        setRemaining((r) => {
-          if (r <= 1) {
-            setRunning(false);
-            setDone(true);
-            setSessions((s) => s + 1);
-            return 0;
-          }
-          return r - 1;
-        });
-      }, 1000);
+        if (endTimeRef.current === null) return;
+        const rem = Math.round((endTimeRef.current - Date.now()) / 1000);
+        if (rem <= 0) {
+          if (intervalRef.current) clearInterval(intervalRef.current);
+          endTimeRef.current = null;
+          setRunning(false);
+          setDone(true);
+          setSessions((s) => s + 1);
+          setRemaining(0);
+        } else {
+          setRemaining(rem);
+        }
+      }, 500);
     } else {
       if (intervalRef.current) clearInterval(intervalRef.current);
+      // When paused, clear endTime
+      endTimeRef.current = null;
     }
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [running]);
+
+  // Page Visibility API: recalculate when tab becomes visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && running) {
+        syncFromEndTime();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [running]);
 
   const handlePreset = (min: number) => {
@@ -54,7 +91,13 @@ export default function FocusTimer({ compact = false }: FocusTimerProps) {
       setRemaining(duration * 60);
       return;
     }
-    setRunning((r) => !r);
+    if (running) {
+      // Pause: store remaining, clear endTime (handled in useEffect)
+      setRunning(false);
+    } else {
+      // Resume/Start: endTime will be set in useEffect based on remaining
+      setRunning(true);
+    }
   };
 
   const handleReset = () => {

@@ -12,6 +12,9 @@ import SettingsApp from "@/components/ui/SettingsApp";
 import SolitaireApp from "@/components/ui/SolitaireApp";
 import TerminalApp from "@/components/ui/TerminalApp";
 import CalculatorApp from "@/components/ui/CalculatorApp";
+import StatsApp from "@/components/ui/StatsApp";
+import AlarmApp from "@/components/ui/AlarmApp";
+import StickyLayer, { addStickyRef } from "@/components/ui/StickyLayer";
 import { WALLPAPER_STYLES, STORAGE_KEY, type WallpaperKey } from "@/components/ui/SettingsApp";
 
 /* ─────────────────────────────────────────────────────────────
@@ -44,6 +47,8 @@ const APP_ICONS = [
   { id: "solitaire",   icon: "🃏", label: "Solitaire" },
   { id: "terminal",   icon: "💻", label: "Terminal" },
   { id: "calculator", icon: "🧮", label: "Calc" },
+  { id: "stats",      icon: "📊", label: "Stats" },
+  { id: "alarms",     icon: "⏰", label: "Alarms" },
 ];
 
 /* ─────────────────────────────────────────────────────────────
@@ -172,6 +177,30 @@ function makeWindows(vw: number): WindowState[] {
       zIndex: 2,
       position: mobile ? { x: 8, y: 60 } : { x: 400, y: 120 },
       width: mobile ? (W ?? 280) : 280,
+      height: "auto",
+    },
+    {
+      id: "stats",
+      title: "Stats",
+      icon: "📊",
+      open: false,
+      minimized: false,
+      focused: false,
+      zIndex: 1,
+      position: mobile ? { x: 8, y: 60 } : { x: 180, y: 60 },
+      width: W ?? 480,
+      height: "auto",
+    },
+    {
+      id: "alarms",
+      title: "Alarms",
+      icon: "⏰",
+      open: false,
+      minimized: false,
+      focused: false,
+      zIndex: 1,
+      position: mobile ? { x: 8, y: 60 } : { x: 220, y: 100 },
+      width: W ?? 340,
       height: "auto",
     },
   ];
@@ -319,8 +348,10 @@ function WindowContent({ id, onOpenWindow }: { id: string; onOpenWindow: (id: st
     case "calendar": return <ScheduleApp />;
     case "settings":  return <SettingsApp />;
     case "solitaire":   return <SolitaireApp />;
-    case "terminal":    return <TerminalApp />;
+    case "terminal":    return <TerminalApp onOpenApp={(id) => onOpenWindow(id)} />;
     case "calculator":  return <CalculatorApp />;
+    case "stats":       return <StatsApp />;
+    case "alarms":      return <AlarmApp />;
     default:            return <div style={{ padding: "24px", textAlign: "center", color: "#6b6560" }}>{id}</div>;
   }
 }
@@ -498,11 +529,15 @@ function Desktop() {
           </OSWindow>
         ))}
 
+      {/* Sticky notes layer */}
+      <StickyLayer />
+
       {/* Taskbar */}
       <OSTaskbar
         windows={windows}
         onWindowClick={handleTaskbarClick}
         onLauncherClick={() => { openWindow("home"); focusWindow("home"); }}
+        onNewSticky={() => addStickyRef.current?.()}
       />
     </div>
   );
