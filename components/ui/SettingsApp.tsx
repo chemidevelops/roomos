@@ -109,7 +109,6 @@ export default function SettingsApp() {
         </div>
         <button
           onClick={() => {
-            localStorage.removeItem("roomos-icon-positions");
             window.dispatchEvent(new Event("roomos-reset-icons"));
           }}
           style={{ padding: "8px 16px", background: "#f0ebe0", border: "2px solid #1a1a1a", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "var(--font-space-grotesk), sans-serif", boxShadow: "2px 2px 0 #1a1a1a" }}

@@ -470,19 +470,23 @@ function Desktop() {
 
   function defaultIconPositions(vw: number, vh: number): Record<string, { x: number; y: number }> {
     const mobile = vw < 768;
-    const cols = mobile ? 4 : 2;
-    const colW = mobile ? Math.floor(vw / cols) : ICON_W + ICON_GAP;
-    const startX = mobile ? 0 : 12;
-    const startY = mobile ? 8 : 8;
-    const maxPerCol = Math.floor((vh - 36 - startY) / (ICON_H + ICON_GAP));
+    const maxRows = Math.floor((vh - 36) / GRID_ROW);
     const positions: Record<string, { x: number; y: number }> = {};
     APP_ICONS.forEach((icon, i) => {
-      const col = Math.floor(i / maxPerCol);
-      const row = i % maxPerCol;
-      positions[icon.id] = {
-        x: startX + col * colW + (mobile ? Math.floor((colW - ICON_W) / 2) : 0),
-        y: startY + row * (ICON_H + ICON_GAP),
-      };
+      if (mobile) {
+        const cols = 4;
+        const colW = Math.floor(vw / cols);
+        const col = i % cols;
+        const row = Math.floor(i / cols);
+        positions[icon.id] = {
+          x: col * colW + Math.floor((colW - ICON_W) / 2),
+          y: row * GRID_ROW,
+        };
+      } else {
+        const col = Math.floor(i / maxRows);
+        const row = i % maxRows;
+        positions[icon.id] = { x: col * GRID_COL, y: row * GRID_ROW };
+      }
     });
     return positions;
   }
@@ -508,6 +512,7 @@ function Desktop() {
   useEffect(() => {
     const onResetIcons = () => {
       const positions = defaultIconPositions(window.innerWidth, window.innerHeight);
+      localStorage.setItem(ICON_STORAGE_KEY, JSON.stringify(positions));
       setIconPositions(positions);
     };
     window.addEventListener("roomos-reset-icons", onResetIcons);
