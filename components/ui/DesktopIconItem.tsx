@@ -1,7 +1,6 @@
 "use client";
 
-import { useRef } from "react";
-import { motion, useDragControls } from "framer-motion";
+import { motion } from "framer-motion";
 
 export interface DesktopIconItemProps {
   id: string;
@@ -18,20 +17,15 @@ export interface DesktopIconItemProps {
 export default function DesktopIconItem({
   icon, label, x, y, selected, onSelect, onDoubleClick, onDragEnd,
 }: DesktopIconItemProps) {
-  const dragControls = useDragControls();
-  const posRef = useRef({ x, y });
-
   return (
     <motion.div
       drag
       dragMomentum={false}
       dragElastic={0}
-      initial={{ x, y }}
+      animate={{ x, y }}
+      transition={{ type: "spring", stiffness: 400, damping: 30 }}
       onDragEnd={(_, info) => {
-        const nx = x + info.offset.x;
-        const ny = y + info.offset.y;
-        posRef.current = { x: nx, y: ny };
-        onDragEnd(nx, ny);
+        onDragEnd(x + info.offset.x, y + info.offset.y);
       }}
       onPointerDown={(e) => { e.stopPropagation(); onSelect(); }}
       onDoubleClick={(e) => { e.stopPropagation(); onDoubleClick(); }}
