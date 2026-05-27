@@ -102,6 +102,21 @@ export default function SettingsApp() {
           ))}
         </div>
       </div>
+
+      <div>
+        <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#6b6560", marginBottom: "12px" }}>
+          Desktop
+        </div>
+        <button
+          onClick={() => {
+            localStorage.removeItem("roomos-icon-positions");
+            window.dispatchEvent(new Event("roomos-reset-icons"));
+          }}
+          style={{ padding: "8px 16px", background: "#f0ebe0", border: "2px solid #1a1a1a", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "var(--font-space-grotesk), sans-serif", boxShadow: "2px 2px 0 #1a1a1a" }}
+        >
+          Reset icon positions
+        </button>
+      </div>
     </div>
   );
 }

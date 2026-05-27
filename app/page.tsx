@@ -417,7 +417,18 @@ function Desktop() {
       }
     };
     window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
+
+    // Reset icons from Settings
+    const onResetIcons = () => {
+      const positions = defaultIconPositions(window.innerWidth, window.innerHeight);
+      setIconPositions(positions);
+    };
+    window.addEventListener("roomos-reset-icons", onResetIcons);
+
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("roomos-reset-icons", onResetIcons);
+    };
   }, []);
 
   const focusWindow = useCallback((id: string) => {
@@ -504,13 +515,32 @@ function Desktop() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const updateIconPosition = useCallback((id: string, x: number, y: number) => {
+  const GRID_COL = 88;
+  const GRID_ROW = 96;
+
+  const snapToGrid = useCallback((id: string, rawX: number, rawY: number, current: Record<string, { x: number; y: number }>) => {
+    const col = Math.round(rawX / GRID_COL);
+    const row = Math.round(rawY / GRID_ROW);
+    const snappedX = col * GRID_COL;
+    const snappedY = row * GRID_ROW;
+    // Check if another icon already occupies this slot
+    const occupied = Object.entries(current).some(([oid, pos]) => {
+      if (oid === id) return false;
+      return Math.round(pos.x / GRID_COL) === col && Math.round(pos.y / GRID_ROW) === row;
+    });
+    if (occupied) return null; // reject — keep original position
+    return { x: snappedX, y: snappedY };
+  }, []);
+
+  const updateIconPosition = useCallback((id: string, rawX: number, rawY: number) => {
     setIconPositions(prev => {
-      const next = { ...prev, [id]: { x, y } };
+      const snapped = snapToGrid(id, rawX, rawY, prev);
+      const pos = snapped ?? prev[id] ?? { x: rawX, y: rawY };
+      const next = { ...prev, [id]: pos };
       localStorage.setItem(ICON_STORAGE_KEY, JSON.stringify(next));
       return next;
     });
-  }, []);
+  }, [snapToGrid]);
 
   const mobile = isMobileRef.current;
   const bgStyle = getWallpaperStyle(wallpaper);
