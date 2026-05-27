@@ -500,7 +500,25 @@ function Desktop() {
     const defaults = defaultIconPositions(window.innerWidth, window.innerHeight);
     try {
       const saved = localStorage.getItem(ICON_STORAGE_KEY);
-      if (saved) return { ...defaults, ...JSON.parse(saved) };
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Snap all saved positions to grid to avoid stale non-grid coords
+        const snapped: Record<string, { x: number; y: number }> = {};
+        const used = new Set<string>();
+        for (const icon of APP_ICONS) {
+          const pos = parsed[icon.id] ?? defaults[icon.id];
+          const col = Math.round(pos.x / GRID_COL);
+          const row = Math.round(pos.y / GRID_ROW);
+          const key = `${col},${row}`;
+          if (!used.has(key)) {
+            used.add(key);
+            snapped[icon.id] = { x: col * GRID_COL, y: row * GRID_ROW };
+          } else {
+            snapped[icon.id] = defaults[icon.id];
+          }
+        }
+        return snapped;
+      }
     } catch {}
     return defaults;
   });
