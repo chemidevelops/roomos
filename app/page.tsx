@@ -417,18 +417,7 @@ function Desktop() {
       }
     };
     window.addEventListener("storage", onStorage);
-
-    // Reset icons from Settings
-    const onResetIcons = () => {
-      const positions = defaultIconPositions(window.innerWidth, window.innerHeight);
-      setIconPositions(positions);
-    };
-    window.addEventListener("roomos-reset-icons", onResetIcons);
-
-    return () => {
-      window.removeEventListener("storage", onStorage);
-      window.removeEventListener("roomos-reset-icons", onResetIcons);
-    };
+    return () => window.removeEventListener("storage", onStorage);
   }, []);
 
   const focusWindow = useCallback((id: string) => {
@@ -512,6 +501,16 @@ function Desktop() {
     const vh = window.innerHeight;
     const saved = localStorage.getItem(ICON_STORAGE_KEY);
     if (!saved) setIconPositions(defaultIconPositions(vw, vh));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const onResetIcons = () => {
+      const positions = defaultIconPositions(window.innerWidth, window.innerHeight);
+      setIconPositions(positions);
+    };
+    window.addEventListener("roomos-reset-icons", onResetIcons);
+    return () => window.removeEventListener("roomos-reset-icons", onResetIcons);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
