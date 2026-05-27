@@ -34,6 +34,13 @@ interface WindowState {
 }
 
 /* ─────────────────────────────────────────────────────────────
+   Icon grid constants
+───────────────────────────────────────────────────────────── */
+const GRID_COL = 88;
+const GRID_ROW = 96;
+const ICON_W = 80;
+
+/* ─────────────────────────────────────────────────────────────
    Icon definitions
 ───────────────────────────────────────────────────────────── */
 const APP_ICONS = [
@@ -464,9 +471,6 @@ function Desktop() {
 
   /* ── Icon positions ── */
   const ICON_STORAGE_KEY = "roomos-icon-positions";
-  const ICON_W = 80;
-  const ICON_H = 88;
-  const ICON_GAP = 8;
 
   function defaultIconPositions(vw: number, vh: number): Record<string, { x: number; y: number }> {
     const mobile = vw < 768;
@@ -519,9 +523,6 @@ function Desktop() {
     return () => window.removeEventListener("roomos-reset-icons", onResetIcons);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const GRID_COL = 88;
-  const GRID_ROW = 96;
 
   const snapToGrid = useCallback((id: string, rawX: number, rawY: number, current: Record<string, { x: number; y: number }>) => {
     const col = Math.round(rawX / GRID_COL);
