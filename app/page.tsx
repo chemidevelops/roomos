@@ -485,7 +485,7 @@ function Desktop() {
     return positions;
   }
 
-  const ICON_STORAGE_VERSION = "v2";
+  const ICON_STORAGE_VERSION = "v3";
 
   const [iconPositions, setIconPositions] = useState<Record<string, { x: number; y: number }>>(() => {
     if (typeof window === "undefined") return {};
