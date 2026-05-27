@@ -10,6 +10,8 @@ import BacklogApp from "@/components/ui/BacklogApp";
 import ScheduleApp from "@/components/ui/ScheduleApp";
 import SettingsApp from "@/components/ui/SettingsApp";
 import SolitaireApp from "@/components/ui/SolitaireApp";
+import TerminalApp from "@/components/ui/TerminalApp";
+import CalculatorApp from "@/components/ui/CalculatorApp";
 import { WALLPAPER_STYLES, STORAGE_KEY, type WallpaperKey } from "@/components/ui/SettingsApp";
 
 /* ─────────────────────────────────────────────────────────────
@@ -39,7 +41,9 @@ const APP_ICONS = [
   { id: "notes",    icon: "📓", label: "Notes" },
   { id: "calendar", icon: "📅", label: "Schedule" },
   { id: "settings", icon: "⚙️",  label: "Settings" },
-  { id: "solitaire", icon: "🃏", label: "Solitaire" },
+  { id: "solitaire",   icon: "🃏", label: "Solitaire" },
+  { id: "terminal",   icon: "💻", label: "Terminal" },
+  { id: "calculator", icon: "🧮", label: "Calc" },
 ];
 
 /* ─────────────────────────────────────────────────────────────
@@ -144,6 +148,30 @@ function makeWindows(vw: number): WindowState[] {
       zIndex: 4,
       position: mobile ? { x: 8, y: 60 } : { x: 200, y: 60 },
       width: mobile ? (W ?? 360) : 560,
+      height: "auto",
+    },
+    {
+      id: "terminal",
+      title: "Terminal",
+      icon: "💻",
+      open: false,
+      minimized: false,
+      focused: false,
+      zIndex: 3,
+      position: mobile ? { x: 8, y: 60 } : { x: 240, y: 80 },
+      width: mobile ? (W ?? 520) : 520,
+      height: 380,
+    },
+    {
+      id: "calculator",
+      title: "Calculator",
+      icon: "🧮",
+      open: false,
+      minimized: false,
+      focused: false,
+      zIndex: 2,
+      position: mobile ? { x: 8, y: 60 } : { x: 400, y: 120 },
+      width: mobile ? (W ?? 280) : 280,
       height: "auto",
     },
   ];
@@ -290,8 +318,10 @@ function WindowContent({ id, onOpenWindow }: { id: string; onOpenWindow: (id: st
     case "notes":    return <NotesApp />;
     case "calendar": return <ScheduleApp />;
     case "settings":  return <SettingsApp />;
-    case "solitaire": return <SolitaireApp />;
-    default:          return <div style={{ padding: "24px", textAlign: "center", color: "#6b6560" }}>{id}</div>;
+    case "solitaire":   return <SolitaireApp />;
+    case "terminal":    return <TerminalApp />;
+    case "calculator":  return <CalculatorApp />;
+    default:            return <div style={{ padding: "24px", textAlign: "center", color: "#6b6560" }}>{id}</div>;
   }
 }
 
@@ -323,12 +353,7 @@ function MobileIconGrid({ onOpen }: { onOpen: (id: string) => void }) {
    Wallpaper helpers
 ───────────────────────────────────────────────────────────── */
 function getWallpaperStyle(key: WallpaperKey): React.CSSProperties {
-  const style = WALLPAPER_STYLES[key];
-  // Determine if it's a color or gradient/image
-  if (style.startsWith("#") || style.startsWith("rgb")) {
-    return { backgroundColor: style };
-  }
-  return { backgroundImage: style };
+  return { background: WALLPAPER_STYLES[key] };
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -467,7 +492,7 @@ function Desktop() {
             onMinimize={() => minimizeWindow(w.id)}
             minimized={w.minimized}
             zIndex={w.zIndex}
-            desktopRef={desktopRef}
+
           >
             <WindowContent id={w.id} onOpenWindow={openWindow} />
           </OSWindow>
