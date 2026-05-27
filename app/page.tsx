@@ -462,6 +462,56 @@ function Desktop() {
     setSelectedIcon(null);
   }, [openWindow, focusWindow]);
 
+  /* ── Icon positions ── */
+  const ICON_STORAGE_KEY = "roomos-icon-positions";
+  const ICON_W = 80;
+  const ICON_H = 88;
+  const ICON_GAP = 8;
+
+  function defaultIconPositions(vw: number, vh: number): Record<string, { x: number; y: number }> {
+    const mobile = vw < 768;
+    const cols = mobile ? 4 : 2;
+    const colW = mobile ? Math.floor(vw / cols) : ICON_W + ICON_GAP;
+    const startX = mobile ? 0 : 12;
+    const startY = mobile ? 8 : 8;
+    const maxPerCol = Math.floor((vh - 36 - startY) / (ICON_H + ICON_GAP));
+    const positions: Record<string, { x: number; y: number }> = {};
+    APP_ICONS.forEach((icon, i) => {
+      const col = Math.floor(i / maxPerCol);
+      const row = i % maxPerCol;
+      positions[icon.id] = {
+        x: startX + col * colW + (mobile ? Math.floor((colW - ICON_W) / 2) : 0),
+        y: startY + row * (ICON_H + ICON_GAP),
+      };
+    });
+    return positions;
+  }
+
+  const [iconPositions, setIconPositions] = useState<Record<string, { x: number; y: number }>>(() => {
+    if (typeof window === "undefined") return {};
+    try {
+      const saved = localStorage.getItem(ICON_STORAGE_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return defaultIconPositions(window.innerWidth, window.innerHeight);
+  });
+
+  useEffect(() => {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const saved = localStorage.getItem(ICON_STORAGE_KEY);
+    if (!saved) setIconPositions(defaultIconPositions(vw, vh));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const updateIconPosition = useCallback((id: string, x: number, y: number) => {
+    setIconPositions(prev => {
+      const next = { ...prev, [id]: { x, y } };
+      localStorage.setItem(ICON_STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
   const mobile = isMobileRef.current;
   const bgStyle = getWallpaperStyle(wallpaper);
 
@@ -481,28 +531,26 @@ function Desktop() {
       }}
       onClick={() => setSelectedIcon(null)}
     >
-      {/* Icons — column on desktop, grid on mobile */}
-      <div
-        style={mobile ? { position: "absolute", top: 0, left: 0, right: 0, zIndex: 5 } : {
-          position: "absolute", top: "20px", left: "20px",
-          display: "flex", flexDirection: "column", gap: "6px", zIndex: 5,
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {mobile ? (
-          <MobileIconGrid onOpen={handleIconActivate} />
-        ) : (
-          APP_ICONS.map((di) => (
-            <DesktopIconItem
-              key={di.id}
-              icon={di.icon}
-              label={di.label}
-              selected={selectedIcon === di.id}
-              onSelect={() => setSelectedIcon(di.id)}
-              onDoubleClick={() => handleIconActivate(di.id)}
-            />
-          ))
-        )}
+      {/* Icons — draggable, absolutely positioned */}
+      <div style={{ position: "absolute", inset: 0, zIndex: 5, pointerEvents: "none" }}>
+        {APP_ICONS.map((di) => {
+          const pos = iconPositions[di.id] ?? { x: 12, y: 12 };
+          return (
+            <div key={di.id} style={{ pointerEvents: "all" }}>
+              <DesktopIconItem
+                id={di.id}
+                icon={di.icon}
+                label={di.label}
+                x={pos.x}
+                y={pos.y}
+                selected={selectedIcon === di.id}
+                onSelect={() => setSelectedIcon(di.id)}
+                onDoubleClick={() => handleIconActivate(di.id)}
+                onDragEnd={(x, y) => updateIconPosition(di.id, x, y)}
+              />
+            </div>
+          );
+        })}
       </div>
 
       {/* Windows */}

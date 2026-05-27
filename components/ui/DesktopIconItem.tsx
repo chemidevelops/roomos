@@ -1,75 +1,78 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useRef } from "react";
+import { motion, useDragControls } from "framer-motion";
 
 export interface DesktopIconItemProps {
+  id: string;
   icon: string;
   label: string;
-  onDoubleClick: () => void;
+  x: number;
+  y: number;
   selected: boolean;
   onSelect: () => void;
+  onDoubleClick: () => void;
+  onDragEnd: (x: number, y: number) => void;
 }
 
 export default function DesktopIconItem({
-  icon,
-  label,
-  onDoubleClick,
-  selected,
-  onSelect,
+  icon, label, x, y, selected, onSelect, onDoubleClick, onDragEnd,
 }: DesktopIconItemProps) {
+  const dragControls = useDragControls();
+  const posRef = useRef({ x, y });
+
   return (
     <motion.div
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.97 }}
-      onClick={(e) => {
-        e.stopPropagation();
-        onSelect();
+      drag
+      dragMomentum={false}
+      dragElastic={0}
+      initial={{ x, y }}
+      onDragEnd={(_, info) => {
+        const nx = x + info.offset.x;
+        const ny = y + info.offset.y;
+        posRef.current = { x: nx, y: ny };
+        onDragEnd(nx, ny);
       }}
-      onDoubleClick={(e) => {
-        e.stopPropagation();
-        onDoubleClick();
-      }}
+      onPointerDown={(e) => { e.stopPropagation(); onSelect(); }}
+      onDoubleClick={(e) => { e.stopPropagation(); onDoubleClick(); }}
       style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
         width: "72px",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         gap: "5px",
-        cursor: "default",
+        cursor: "grab",
         userSelect: "none",
         padding: "6px 4px",
+        touchAction: "none",
       }}
     >
-      {/* Icon */}
-      <div
-        style={{
-          fontSize: "40px",
-          lineHeight: 1,
-          filter: selected
-            ? "drop-shadow(0 0 8px rgba(245,200,0,0.8))"
-            : "drop-shadow(0 2px 4px rgba(0,0,0,0.35))",
-        }}
-      >
+      <div style={{
+        fontSize: "40px",
+        lineHeight: 1,
+        filter: selected
+          ? "drop-shadow(0 0 8px rgba(245,200,0,0.8))"
+          : "drop-shadow(0 2px 4px rgba(0,0,0,0.35))",
+      }}>
         {icon}
       </div>
-
-      {/* Label */}
-      <span
-        style={{
-          fontFamily: "var(--font-space-grotesk), 'Space Grotesk', sans-serif",
-          fontSize: "11px",
-          fontWeight: 600,
-          color: "#ffffff",
-          background: selected ? "rgba(245,200,0,0.85)" : "rgba(0,0,0,0.45)",
-          padding: "1px 5px",
-          borderRadius: "2px",
-          textAlign: "center",
-          lineHeight: 1.4,
-          maxWidth: "70px",
-          wordBreak: "break-word",
-          backdropFilter: "blur(4px)",
-        }}
-      >
+      <span style={{
+        fontFamily: "var(--font-space-grotesk), sans-serif",
+        fontSize: "11px",
+        fontWeight: 600,
+        color: "#ffffff",
+        background: selected ? "rgba(245,200,0,0.85)" : "rgba(0,0,0,0.45)",
+        padding: "1px 5px",
+        borderRadius: "2px",
+        textAlign: "center",
+        lineHeight: 1.4,
+        maxWidth: "70px",
+        wordBreak: "break-word",
+        backdropFilter: "blur(4px)",
+      }}>
         {label}
       </span>
     </motion.div>
