@@ -474,60 +474,40 @@ function Desktop() {
 
   function defaultIconPositions(vw: number, vh: number): Record<string, { x: number; y: number }> {
     const mobile = vw < 768;
+    const maxCols = mobile ? 4 : 2;
     const maxRows = Math.floor((vh - 36) / GRID_ROW);
     const positions: Record<string, { x: number; y: number }> = {};
     APP_ICONS.forEach((icon, i) => {
-      if (mobile) {
-        const cols = 4;
-        const colW = Math.floor(vw / cols);
-        const col = i % cols;
-        const row = Math.floor(i / cols);
-        positions[icon.id] = {
-          x: col * colW + Math.floor((colW - ICON_W) / 2),
-          y: row * GRID_ROW,
-        };
-      } else {
-        const col = Math.floor(i / maxRows);
-        const row = i % maxRows;
-        positions[icon.id] = { x: col * GRID_COL, y: row * GRID_ROW };
-      }
+      const col = mobile ? (i % maxCols) : Math.floor(i / maxRows);
+      const row = mobile ? Math.floor(i / maxCols) : (i % maxRows);
+      positions[icon.id] = { x: col * GRID_COL, y: row * GRID_ROW };
     });
     return positions;
   }
+
+  const ICON_STORAGE_VERSION = "v2";
 
   const [iconPositions, setIconPositions] = useState<Record<string, { x: number; y: number }>>(() => {
     if (typeof window === "undefined") return {};
     const defaults = defaultIconPositions(window.innerWidth, window.innerHeight);
     try {
-      const saved = localStorage.getItem(ICON_STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        // Snap all saved positions to grid to avoid stale non-grid coords
-        const snapped: Record<string, { x: number; y: number }> = {};
-        const used = new Set<string>();
-        for (const icon of APP_ICONS) {
-          const pos = parsed[icon.id] ?? defaults[icon.id];
-          const col = Math.round(pos.x / GRID_COL);
-          const row = Math.round(pos.y / GRID_ROW);
-          const key = `${col},${row}`;
-          if (!used.has(key)) {
-            used.add(key);
-            snapped[icon.id] = { x: col * GRID_COL, y: row * GRID_ROW };
-          } else {
-            snapped[icon.id] = defaults[icon.id];
-          }
-        }
-        return snapped;
+      const version = localStorage.getItem(ICON_STORAGE_KEY + "-version");
+      if (version === ICON_STORAGE_VERSION) {
+        const saved = localStorage.getItem(ICON_STORAGE_KEY);
+        if (saved) return { ...defaults, ...JSON.parse(saved) };
       }
     } catch {}
     return defaults;
   });
 
   useEffect(() => {
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const saved = localStorage.getItem(ICON_STORAGE_KEY);
-    if (!saved) setIconPositions(defaultIconPositions(vw, vh));
+    const version = localStorage.getItem(ICON_STORAGE_KEY + "-version");
+    if (version !== ICON_STORAGE_VERSION) {
+      const positions = defaultIconPositions(window.innerWidth, window.innerHeight);
+      localStorage.setItem(ICON_STORAGE_KEY, JSON.stringify(positions));
+      localStorage.setItem(ICON_STORAGE_KEY + "-version", ICON_STORAGE_VERSION);
+      setIconPositions(positions);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -565,12 +545,14 @@ function Desktop() {
         const pos = defaults[id] ?? { x: 0, y: 0 };
         const next = { ...prev, [id]: pos };
         localStorage.setItem(ICON_STORAGE_KEY, JSON.stringify(next));
+        localStorage.setItem(ICON_STORAGE_KEY + "-version", ICON_STORAGE_VERSION);
         return next;
       }
       const pos = snapped ?? prev[id];
       if (!pos) return prev;
       const next = { ...prev, [id]: pos };
       localStorage.setItem(ICON_STORAGE_KEY, JSON.stringify(next));
+      localStorage.setItem(ICON_STORAGE_KEY + "-version", ICON_STORAGE_VERSION);
       return next;
     });
   }, [snapToGrid]);
