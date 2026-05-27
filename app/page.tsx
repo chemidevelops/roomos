@@ -489,11 +489,12 @@ function Desktop() {
 
   const [iconPositions, setIconPositions] = useState<Record<string, { x: number; y: number }>>(() => {
     if (typeof window === "undefined") return {};
+    const defaults = defaultIconPositions(window.innerWidth, window.innerHeight);
     try {
       const saved = localStorage.getItem(ICON_STORAGE_KEY);
-      if (saved) return JSON.parse(saved);
+      if (saved) return { ...defaults, ...JSON.parse(saved) };
     } catch {}
-    return defaultIconPositions(window.innerWidth, window.innerHeight);
+    return defaults;
   });
 
   useEffect(() => {
@@ -534,7 +535,16 @@ function Desktop() {
   const updateIconPosition = useCallback((id: string, rawX: number, rawY: number) => {
     setIconPositions(prev => {
       const snapped = snapToGrid(id, rawX, rawY, prev);
-      const pos = snapped ?? prev[id] ?? { x: rawX, y: rawY };
+      // If slot occupied and no prior position recorded, snap to nearest free slot
+      if (!snapped && !prev[id]) {
+        const defaults = defaultIconPositions(window.innerWidth, window.innerHeight);
+        const pos = defaults[id] ?? { x: 0, y: 0 };
+        const next = { ...prev, [id]: pos };
+        localStorage.setItem(ICON_STORAGE_KEY, JSON.stringify(next));
+        return next;
+      }
+      const pos = snapped ?? prev[id];
+      if (!pos) return prev;
       const next = { ...prev, [id]: pos };
       localStorage.setItem(ICON_STORAGE_KEY, JSON.stringify(next));
       return next;
