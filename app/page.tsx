@@ -343,6 +343,7 @@ function Desktop() {
   const [wallpaper, setWallpaper] = useState<WallpaperKey>("gradient-dark");
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
   const isMobileRef = useRef(isMobile);
+  const desktopRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const vw = window.innerWidth;
@@ -416,6 +417,7 @@ function Desktop() {
 
   return (
     <div
+      ref={desktopRef}
       style={{
         position: "fixed", inset: 0, overflow: "hidden", paddingBottom: "36px",
         ...bgStyle,
@@ -465,6 +467,7 @@ function Desktop() {
             onMinimize={() => minimizeWindow(w.id)}
             minimized={w.minimized}
             zIndex={w.zIndex}
+            desktopRef={desktopRef}
           >
             <WindowContent id={w.id} onOpenWindow={openWindow} />
           </OSWindow>

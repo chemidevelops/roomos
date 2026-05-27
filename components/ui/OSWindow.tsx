@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { motion, AnimatePresence, useDragControls } from "framer-motion";
 
 export interface OSWindowProps {
@@ -16,6 +17,7 @@ export interface OSWindowProps {
   onMinimize: () => void;
   minimized: boolean;
   zIndex: number;
+  desktopRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 export default function OSWindow({
@@ -31,8 +33,10 @@ export default function OSWindow({
   onMinimize,
   minimized,
   zIndex,
+  desktopRef,
 }: OSWindowProps) {
   const dragControls = useDragControls();
+  const containerRef = useRef<HTMLDivElement>(null);
 
   if (minimized) return null;
 
@@ -46,6 +50,7 @@ export default function OSWindow({
         dragListener={false}
         dragMomentum={false}
         dragElastic={0}
+        dragConstraints={desktopRef ?? { top: 0, left: 0, right: 4000, bottom: 4000 }}
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.92 }}
