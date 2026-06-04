@@ -12,6 +12,7 @@ interface FeedItem {
 
 const FEEDS = [
   { name: "Anait Games", url: "https://www.anaitgames.com/feed" },
+  { name: "Vida Extra", url: "https://www.vidaextra.com/feedburner.xml" },
 ];
 
 const scrollbar: React.CSSProperties = {
@@ -129,9 +130,9 @@ export default function RSSApp() {
               href={selected.link}
               target="_blank"
               rel="noopener noreferrer"
-              style={{ display: "inline-block", marginTop: 16, fontSize: 12, color: "#1a1a1a", textDecoration: "underline" }}
+              style={{ display: "inline-block", marginTop: 16, fontSize: 12, color: "#888", textDecoration: "underline" }}
             >
-              Leer artículo completo →
+              Ver en web →
             </a>
           </>
         ) : (
