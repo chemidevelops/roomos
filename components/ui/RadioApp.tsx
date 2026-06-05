@@ -42,6 +42,7 @@ interface NowPlaying {
 
 export default function RadioApp() {
   const [active, setActive] = useState<string | null>(null);
+  const [playing, setPlaying] = useState(false);
   const [loading, setLoading] = useState(false);
   const [vol, setVol] = useState(0.8);
   const [tick, setTick] = useState(0);
@@ -69,18 +70,31 @@ export default function RadioApp() {
 
   function play(stationId: string) {
     const station = STATIONS.find(s => s.id === stationId)!;
+    // misma emisora → solo toggle pause/play
     if (active === stationId) {
-      audioRef.current?.pause();
-      setActive(null);
+      togglePause();
       return;
     }
+    // nueva emisora
     setLoading(true);
     if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ""; }
     const audio = new Audio(station.stream);
     audio.volume = vol;
-    audio.play().then(() => setLoading(false)).catch(() => setLoading(false));
+    audio.play().then(() => { setLoading(false); setPlaying(true); }).catch(() => setLoading(false));
     audioRef.current = audio;
     setActive(stationId);
+    setPlaying(true);
+  }
+
+  function togglePause() {
+    if (!audioRef.current) return;
+    if (audioRef.current.paused) {
+      audioRef.current.play().catch(() => {});
+      setPlaying(true);
+    } else {
+      audioRef.current.pause();
+      setPlaying(false);
+    }
   }
 
   function handleVol(e: React.ChangeEvent<HTMLInputElement>) {
@@ -101,7 +115,7 @@ export default function RadioApp() {
       {/* Now playing */}
       <div style={{ borderBottom: "2px solid #1a1a1a", paddingBottom: 12 }}>
         <div style={{ fontSize: 8, letterSpacing: "0.2em", textTransform: "uppercase", color: "#888", marginBottom: 4 }}>
-          {active ? (loading ? "CONNECTING..." : "● ON AIR") : "○ OFF"}
+          {!active ? "○ OFF" : loading ? "CONNECTING..." : playing ? "● ON AIR" : "⏸ PAUSED"}
         </div>
 
         <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
@@ -150,7 +164,7 @@ export default function RadioApp() {
           {bars.map((h, i) => (
             <div key={i} style={{
               flex: 1,
-              height: active && !loading ? `${Math.max(2, ((h + (tick + i) % 5) / 14) * 100)}%` : 2,
+              height: active && playing && !loading ? `${Math.max(2, ((h + (tick + i) % 5) / 14) * 100)}%` : 2,
               background: active ? "#1a1a1a" : "#ddd",
               transition: "height 0.4s ease",
             }} />
@@ -187,14 +201,14 @@ export default function RadioApp() {
           <input type="range" min="0" max="1" step="0.05" value={vol} onChange={handleVol}
             style={{ flex: 1, accentColor: "#1a1a1a", cursor: "pointer" }} />
           <span style={{ fontSize: 9 }}>█</span>
-          <button onClick={() => active && play(active)} style={{
+          <button onClick={() => active && togglePause()} style={{
             background: "#1a1a1a", color: "#fff",
             border: "none", width: 28, height: 28,
             cursor: active ? "pointer" : "default",
             fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center",
             opacity: active ? 1 : 0.3, flexShrink: 0,
           }}>
-            {active ? "⏸" : "▶"}
+            {playing ? "⏸" : "▶"}
           </button>
         </div>
       </div>
