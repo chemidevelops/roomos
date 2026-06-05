@@ -22,7 +22,7 @@ const STATIONS = [
     name: "BBC Radio 6",
     city: "London, UK",
     freq: "DAB",
-    stream: "https://stream.live.vc.bbcmedia.co.uk/bbc_6music",
+    stream: "http://as-hls-ww-live.akamaized.net/pool_81827798/live/ww/bbc_6music/bbc_6music.isml/bbc_6music-audio=320000.norewind.m3u8",
   },
 ];
 
