@@ -57,8 +57,6 @@ function processCommand(cmd: string): string[] {
       "  cls/clear               — clear the screen",
       "  echo                    — print text",
       "  whoami                  — print current user",
-      "  sysinfo                 — system information",
-      "  ls/dir                  — directory listing",
       "  ver                     — OS version",
       "  matrix                  — ???",
       "  open <app>              — open an app",
@@ -67,6 +65,14 @@ function processCommand(cmd: string): string[] {
       "  today                   — show today's schedule",
       "  streak                  — show habit streak",
       "  done                    — count done activities today",
+      "",
+      "  — SERVER —",
+      "  top                     — running processes",
+      "  ps                      — process list by CPU",
+      "  df                      — disk usage",
+      "  free                    — memory usage",
+      "  pm2                     — service status",
+      "  logs                    — nginx access log (last 30)",
     ];
   }
 
@@ -125,6 +131,10 @@ function processCommand(cmd: string): string[] {
 
   if (lower === "matrix") {
     return ["__MATRIX__"];
+  }
+
+  if (["top", "ps", "df", "free", "pm2", "logs", "pixel"].includes(lower)) {
+    return [`__SERVER__:${lower}`];
   }
 
   if (verb === "open") {
@@ -321,6 +331,22 @@ export default function TerminalApp({ onOpenApp = () => {} }: TerminalAppProps) 
         }
       } catch {
         appendLines(["Error: network failure."]);
+      }
+      return;
+    }
+
+    // Server commands
+    const SERVER_CMDS = ["top", "ps", "df", "free", "pm2", "logs", "pixel"];
+    const cmdName = result[0]?.replace("__SERVER__:", "") ?? "";
+    if (result[0]?.startsWith("__SERVER__:")) {
+      setLines((prev) => [...prev, inputLine, { type: "output", text: "Loading..." }]);
+      try {
+        const res = await fetch(`/api/terminal?cmd=${cmdName}`);
+        const data = await res.json();
+        const out = (data.output || data.error || "").split("\n").map((t: string) => ({ type: "output" as const, text: t }));
+        setLines((prev) => [...prev.slice(0, -1), ...out]);
+      } catch {
+        setLines((prev) => [...prev.slice(0, -1), { type: "output", text: "Error connecting to server." }]);
       }
       return;
     }
