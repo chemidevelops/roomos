@@ -236,7 +236,7 @@ function makeWindows(vw: number): WindowState[] {
       zIndex: 1,
       position: mobile ? { x: 8, y: 60 } : { x: 300, y: 120 },
       width: W ?? 280,
-      height: 380,
+      height: 520,
     },
   ];
 }

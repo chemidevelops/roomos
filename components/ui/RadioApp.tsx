@@ -158,6 +158,19 @@ export default function RadioApp() {
         </div>
       </div>
 
+      {/* Pause button */}
+      {active && (
+        <button onClick={() => play(active)} style={{
+          background: "#1a1a1a", color: "#fff",
+          border: "none", padding: "8px",
+          cursor: "pointer", fontFamily: "monospace",
+          fontSize: 16, letterSpacing: "0.1em",
+          width: "100%",
+        }}>
+          ⏸ PAUSE
+        </button>
+      )}
+
       {/* Stations */}
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
         {STATIONS.map(s => (
