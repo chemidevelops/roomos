@@ -18,9 +18,14 @@ const FEEDS = [
 const scrollbar: React.CSSProperties = { overflowY: "auto", scrollbarWidth: "thin" };
 
 const strip = (html: string) => html
-  .replace(/<[^>]*>/g, " ")
-  .replace(/\{[^}]{0,300}\}/g, "")
-  .replace(/https?:\/\/\S+/g, "")
+  .replace(/<script[\s\S]*?<\/script>/gi, "")   // quita bloques <script>
+  .replace(/<style[\s\S]*?<\/style>/gi, "")      // quita bloques <style>
+  .replace(/<[^>]*>/g, " ")                      // quita etiquetas HTML
+  .replace(/\(function\s*\([\s\S]*?\}\s*\)\s*[;(]/g, "")  // quita IIFEs
+  .replace(/\bvar\s+\w+\s*=[\s\S]{0,200}?;/g, "")         // quita var x = ...
+  .replace(/\{[^}]{0,500}\}/g, "")              // quita bloques {}
+  .replace(/https?:\/\/\S+/g, "")               // quita URLs
+  .replace(/[;()[\]]/g, " ")                    // quita restos de JS
   .replace(/\s{2,}/g, " ")
   .trim();
 
