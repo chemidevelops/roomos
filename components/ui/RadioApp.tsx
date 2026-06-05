@@ -158,19 +158,6 @@ export default function RadioApp() {
         </div>
       </div>
 
-      {/* Pause button */}
-      {active && (
-        <button onClick={() => play(active)} style={{
-          background: "#1a1a1a", color: "#fff",
-          border: "none", padding: "8px",
-          cursor: "pointer", fontFamily: "monospace",
-          fontSize: 16, letterSpacing: "0.1em",
-          width: "100%",
-        }}>
-          ⏸ PAUSE
-        </button>
-      )}
-
       {/* Stations */}
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
         {STATIONS.map(s => (
@@ -192,7 +179,7 @@ export default function RadioApp() {
         ))}
       </div>
 
-      {/* Volumen */}
+      {/* Volumen + pausa */}
       <div style={{ marginTop: "auto", borderTop: "1px solid #ddd", paddingTop: 10 }}>
         <div style={{ fontSize: 8, letterSpacing: "0.15em", textTransform: "uppercase", color: "#888", marginBottom: 5 }}>VOL</div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -200,6 +187,15 @@ export default function RadioApp() {
           <input type="range" min="0" max="1" step="0.05" value={vol} onChange={handleVol}
             style={{ flex: 1, accentColor: "#1a1a1a", cursor: "pointer" }} />
           <span style={{ fontSize: 9 }}>█</span>
+          <button onClick={() => active && play(active)} style={{
+            background: "#1a1a1a", color: "#fff",
+            border: "none", width: 28, height: 28,
+            cursor: active ? "pointer" : "default",
+            fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center",
+            opacity: active ? 1 : 0.3, flexShrink: 0,
+          }}>
+            {active ? "⏸" : "▶"}
+          </button>
         </div>
       </div>
     </div>
