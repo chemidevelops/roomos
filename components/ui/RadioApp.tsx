@@ -24,6 +24,13 @@ const STATIONS = [
     freq: "DAB",
     stream: "http://as-hls-ww-live.akamaized.net/pool_81827798/live/ww/bbc_6music/bbc_6music.isml/bbc_6music-audio=320000.norewind.m3u8",
   },
+  {
+    id: "absolute",
+    name: "Absolute Radio",
+    city: "London, UK",
+    freq: "105.8",
+    stream: "http://stream-ar.planetradio.co.uk/absoluteradiohigh.aac?direct=true&aw_0_1st.playerid=BMUK_Airable&aw_0_1st.skey=6778249992&aw_0_1st.bauer_loggedin=true",
+  },
 ];
 
 interface NowPlaying {
