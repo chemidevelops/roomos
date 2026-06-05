@@ -39,5 +39,24 @@ export async function GET() {
     results.radiox = { artist: "Radio X", title: "En directo" };
   }
 
+  // BBC Radio 6 Music
+  try {
+    const res = await fetch(
+      "https://rms.api.bbc.co.uk/v2/services/bbc_6music/segments/latest",
+      { next: { revalidate: 30 } }
+    );
+    if (res.ok) {
+      const data = await res.json();
+      const track = data.data?.find((s: any) => s.segment_type === "music");
+      if (track) {
+        results.bbc6 = {
+          artist: track.titles?.secondary || "",
+          title: track.titles?.primary || "",
+          art: track.image_url?.replace("{recipe}", "320x320") || "",
+        };
+      }
+    }
+  } catch {}
+
   return NextResponse.json(results);
 }

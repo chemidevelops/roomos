@@ -17,6 +17,13 @@ const STATIONS = [
     freq: "104.9",
     stream: "https://media-ssl.musicradio.com/RadioXUK",
   },
+  {
+    id: "bbc6",
+    name: "BBC Radio 6",
+    city: "London, UK",
+    freq: "DAB",
+    stream: "https://stream.live.vc.bbcmedia.co.uk/bbc_6music",
+  },
 ];
 
 interface NowPlaying {
