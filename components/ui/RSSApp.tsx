@@ -11,7 +11,7 @@ interface FeedItem {
 }
 
 const FEEDS = [
-  { name: "Anait Games", url: "https://www.anaitgames.com/feed" },
+  { name: "Hacker News", url: "https://news.ycombinator.com/rss" },
   { name: "Vida Extra", url: "https://www.vidaextra.com/feedburner.xml" },
 ];
 

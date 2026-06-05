@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { motion, AnimatePresence, useDragControls } from "framer-motion";
 
 export interface OSWindowProps {
@@ -35,15 +35,32 @@ export default function OSWindow({
 }: OSWindowProps) {
   const dragControls = useDragControls();
   const containerRef = useRef<HTMLDivElement>(null);
+  const [maximized, setMaximized] = useState(false);
 
   if (minimized) return null;
 
   const titleBarBg = focused ? "#1a1a1a" : "#8a8480";
 
+  const maxStyle = maximized ? {
+    position: "fixed" as const,
+    top: 0,
+    left: 0,
+    width: "100vw",
+    height: "100vh",
+    zIndex: 9999,
+  } : {
+    position: "absolute" as const,
+    top: defaultPosition.y,
+    left: defaultPosition.x,
+    width: width,
+    height: height === "auto" ? undefined : height,
+    zIndex: zIndex,
+  };
+
   return (
     <AnimatePresence>
       <motion.div
-        drag
+        drag={!maximized}
         dragControls={dragControls}
         dragListener={false}
         dragMomentum={false}
@@ -54,25 +71,21 @@ export default function OSWindow({
         transition={{ duration: 0.12 }}
         onPointerDown={onFocus}
         style={{
-          position: "absolute",
-          top: defaultPosition.y,
-          left: defaultPosition.x,
-          width: width,
-          height: height === "auto" ? undefined : height,
           border: "2px solid #1a1a1a",
           boxShadow: focused ? "6px 6px 0px #1a1a1a" : "4px 4px 0px #1a1a1a",
           background: "var(--room-paper, #faf7f2)",
           borderRadius: 0,
-          zIndex: zIndex,
           userSelect: "none",
           display: "flex",
           flexDirection: "column",
-          transition: "box-shadow 0.1s",
+          transition: "box-shadow 0.1s, width 0.15s, height 0.15s",
+          ...maxStyle,
         }}
       >
-        {/* Title bar — drag handle */}
+        {/* Title bar */}
         <div
-          onPointerDown={(e) => dragControls.start(e)}
+          onPointerDown={(e) => { if (!maximized) dragControls.start(e); }}
+          onDoubleClick={() => setMaximized(m => !m)}
           style={{
             height: "32px",
             minHeight: "32px",
@@ -81,81 +94,43 @@ export default function OSWindow({
             alignItems: "center",
             justifyContent: "space-between",
             padding: "0 0 0 10px",
-            cursor: "move",
+            cursor: maximized ? "default" : "move",
             flexShrink: 0,
             touchAction: "none",
           }}
         >
-          {/* Left: icon + title */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", overflow: "hidden" }}>
+            {icon && <span style={{ fontSize: "14px", lineHeight: 1, flexShrink: 0 }}>{icon}</span>}
+            <span style={{
+              fontFamily: "var(--font-space-grotesk), 'Space Grotesk', sans-serif",
+              fontSize: "12px",
+              fontWeight: 700,
+              color: "#ffffff",
+              whiteSpace: "nowrap",
               overflow: "hidden",
-            }}
-          >
-            {icon && (
-              <span style={{ fontSize: "14px", lineHeight: 1, flexShrink: 0 }}>
-                {icon}
-              </span>
-            )}
-            <span
-              style={{
-                fontFamily: "var(--font-space-grotesk), 'Space Grotesk', sans-serif",
-                fontSize: "12px",
-                fontWeight: 700,
-                color: "#ffffff",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                letterSpacing: "0.02em",
-              }}
-            >
+              textOverflow: "ellipsis",
+              letterSpacing: "0.02em",
+            }}>
               {title}
             </span>
           </div>
 
-          {/* Right: window control buttons */}
           <div style={{ display: "flex", alignItems: "stretch", height: "100%", flexShrink: 0 }}>
-            {/* Minimize */}
+            <WindowButton label="_" hoverBg="#f5c800" hoverColor="#1a1a1a"
+              onClick={(e) => { e.stopPropagation(); onMinimize(); }} />
             <WindowButton
-              label="_"
-              hoverBg="#f5c800"
-              hoverColor="#1a1a1a"
-              onClick={(e) => {
-                e.stopPropagation();
-                onMinimize();
-              }}
+              label={maximized ? "❐" : "□"}
+              hoverBg="#1d4ed8" hoverColor="#ffffff"
+              onClick={(e) => { e.stopPropagation(); setMaximized(m => !m); }}
             />
-            {/* Maximize (no-op visual) */}
-            <WindowButton
-              label="□"
-              hoverBg="#1d4ed8"
-              hoverColor="#ffffff"
-              onClick={(e) => e.stopPropagation()}
-            />
-            {/* Close */}
-            <WindowButton
-              label="×"
-              hoverBg="#dc2626"
-              hoverColor="#ffffff"
-              onClick={(e) => {
-                e.stopPropagation();
-                onClose();
-              }}
-            />
+            <WindowButton label="×" hoverBg="#dc2626" hoverColor="#ffffff"
+              onClick={(e) => { e.stopPropagation(); onClose(); }} />
           </div>
         </div>
 
         {/* Content */}
         <div
-          style={{
-            flex: 1,
-            overflow: "auto",
-            background: "var(--room-paper, #faf7f2)",
-            userSelect: "text",
-          }}
+          style={{ flex: 1, overflow: "auto", background: "var(--room-paper, #faf7f2)", userSelect: "text" }}
           onPointerDown={(e) => e.stopPropagation()}
         >
           {children}
@@ -165,38 +140,20 @@ export default function OSWindow({
   );
 }
 
-function WindowButton({
-  label,
-  hoverBg,
-  hoverColor,
-  onClick,
-}: {
-  label: string;
-  hoverBg: string;
-  hoverColor: string;
+function WindowButton({ label, hoverBg, hoverColor, onClick }: {
+  label: string; hoverBg: string; hoverColor: string;
   onClick: (e: React.MouseEvent) => void;
 }) {
   return (
-    <button
-      onClick={onClick}
-      style={{
-        width: "24px",
-        background: "transparent",
-        border: "none",
-        borderLeft: "1px solid rgba(255,255,255,0.2)",
-        color: "#ffffff",
-        fontSize: "14px",
-        fontWeight: 700,
-        cursor: "pointer",
-        fontFamily: "var(--font-space-grotesk), sans-serif",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        height: "100%",
-        padding: 0,
-        lineHeight: 1,
-        transition: "background 0.1s, color 0.1s",
-      }}
+    <button onClick={onClick} style={{
+      width: "24px", background: "transparent", border: "none",
+      borderLeft: "1px solid rgba(255,255,255,0.2)", color: "#ffffff",
+      fontSize: "14px", fontWeight: 700, cursor: "pointer",
+      fontFamily: "var(--font-space-grotesk), sans-serif",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      height: "100%", padding: 0, lineHeight: 1,
+      transition: "background 0.1s, color 0.1s",
+    }}
       onMouseEnter={(e) => {
         (e.currentTarget as HTMLButtonElement).style.background = hoverBg;
         (e.currentTarget as HTMLButtonElement).style.color = hoverColor;
