@@ -59,7 +59,12 @@ export default function RSSApp() {
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString("es-ES", { day: "numeric", month: "short" });
 
-  const strip = (html: string) => html.replace(/<[^>]*>/g, "").trim();
+  const strip = (html: string) => html
+    .replace(/<[^>]*>/g, " ")           // quita etiquetas HTML
+    .replace(/\{[^}]{0,300}\}/g, "")    // quita JSON inline
+    .replace(/https?:\/\/\S+/g, "")     // quita URLs sueltas
+    .replace(/\s{2,}/g, " ")            // colapsa espacios
+    .trim();
 
   return (
     <div style={{ display: "flex", height: "100%", fontFamily: "monospace", fontSize: 13 }}>
