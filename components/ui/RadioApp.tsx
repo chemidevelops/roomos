@@ -116,6 +116,17 @@ export default function RadioApp() {
     if (audioRef.current) audioRef.current.volume = v;
   }
 
+  // Guardar progreso cada 2 minutos mientras suena
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (trackingRef.current && playing) {
+        logUsage(trackingRef.current.station, trackingRef.current.start);
+        trackingRef.current = { station: trackingRef.current.station, start: Date.now() };
+      }
+    }, 2 * 60 * 1000);
+    return () => clearInterval(id);
+  }, [playing]);
+
   useEffect(() => () => {
     audioRef.current?.pause();
     if (trackingRef.current) logUsage(trackingRef.current.station, trackingRef.current.start);

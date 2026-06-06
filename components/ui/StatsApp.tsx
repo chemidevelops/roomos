@@ -41,13 +41,21 @@ export default function StatsApp() {
   const [loading, setLoading] = useState(true);
   const [activeType, setActiveType] = useState<string | null>(null);
 
-  useEffect(() => {
+  const load = () => {
     setLoading(true);
     fetch(`/api/usage?days=${days}`)
       .then(r => r.json())
       .then(setData)
       .catch(() => {})
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { load(); }, [days]);
+
+  // Auto-refresh cada 30 segundos
+  useEffect(() => {
+    const id = setInterval(load, 30000);
+    return () => clearInterval(id);
   }, [days]);
 
   if (loading) return <div style={{ padding: 24, fontFamily: "monospace", color: "#aaa" }}>Cargando...</div>;
@@ -75,6 +83,7 @@ export default function StatsApp() {
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase" }}>Stats</div>
+        <button onClick={load} style={{ background: "none", border: "none", cursor: "pointer", color: "#aaa", fontSize: 14 }}>↻</button>
         <div style={{ display: "flex", gap: 4 }}>
           {[7, 30, 90].map(d => (
             <button key={d} onClick={() => setDays(d)} style={{

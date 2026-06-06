@@ -131,6 +131,16 @@ export default function PodcastApp() {
       : `${m}:${String(sec).padStart(2,"0")}`;
   }
 
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (trackingRef.current && playing) {
+        logUsage(trackingRef.current.label, trackingRef.current.start);
+        trackingRef.current = { label: trackingRef.current.label, start: Date.now() };
+      }
+    }, 2 * 60 * 1000);
+    return () => clearInterval(id);
+  }, [playing]);
+
   useEffect(() => () => {
     audioRef.current?.pause();
     if (trackingRef.current) logUsage(trackingRef.current.label, trackingRef.current.start);
