@@ -22,7 +22,7 @@ export default function NewsTicker() {
       bottom: 36,
       left: 0,
       right: 0,
-      height: 22,
+      height: 28,
       background: "#111",
       borderTop: "1px solid #2a2a2a",
       borderBottom: "1px solid #2a2a2a",
@@ -36,7 +36,7 @@ export default function NewsTicker() {
         flexShrink: 0,
         padding: "0 8px",
         borderRight: "1px solid #333",
-        fontSize: 9,
+        fontSize: 11,
         fontWeight: 700,
         letterSpacing: "0.15em",
         color: "#FF6600",
@@ -56,11 +56,11 @@ export default function NewsTicker() {
           .ticker-text {
             display: inline-block;
             white-space: nowrap;
-            animation: ticker ${Math.max(30, items.length * 4)}s linear infinite;
-            font-size: 10px;
+            animation: ticker ${Math.max(60, items.length * 7)}s linear infinite;
+            font-size: 12px;
             color: #ccc;
             font-family: monospace;
-            letter-spacing: 0.03em;
+            letter-spacing: 0.04em;
           }
         `}</style>
         <span className="ticker-text">{text}</span>

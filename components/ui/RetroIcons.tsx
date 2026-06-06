@@ -4,11 +4,11 @@ const BASE = "https://raw.githubusercontent.com/BlissThatMiss/MoNine/master/apps
 export const RETRO_ICON_URLS: Record<string, string> = {
   calendar:   `${BASE}/gnome-calendar.png`,
   notes:      `${BASE}/xfce4-notes-plugin.png`,
-  settings:   `${BASE}/gnome-control-centre.png`,
+  settings:   `https://raw.githubusercontent.com/BlissThatMiss/MoNine/master/categories/32/gtk-preferences.png`,
   solitaire:  `https://raw.githubusercontent.com/BlissThatMiss/MoNine/master/xfce-games.png`,
   terminal:   `${BASE}/org.xfce.terminal.png`,
   calculator: `${BASE}/accessories-calculator.png`,
-  stats:      `${BASE}/gnome-system-monitor.png`,
+  stats:      `https://raw.githubusercontent.com/BlissThatMiss/MoNine/master/mimes/32/application-vnd.oasis.opendocument.chart.png`,
   rss:        `${BASE}/internet-web-browser.png`,
   podcasts:   `${BASE}/multimedia-audio-player.png`,
   radio:      `${BASE}/gnome-audio.png`,
