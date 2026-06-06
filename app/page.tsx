@@ -609,7 +609,6 @@ function Desktop() {
             onClose={() => closeWindow(w.id)}
             onMinimize={() => minimizeWindow(w.id)}
             minimized={w.minimized}
-            keepMountedWhenMinimized={w.id === "tv"}
             zIndex={w.zIndex}
 
           >
