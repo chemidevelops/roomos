@@ -255,9 +255,15 @@ export default function TVApp() {
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "#555" }}>
           Loading...
         </div>
-      ) : mode === "tv" ? (
-        /* ── TV MODE ── */
-        <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+      ) : (
+        <div style={{ flex: 1, position: "relative", minHeight: 0 }}>
+          {/* TV stays mounted so playback continues in feed mode. */}
+          <div style={{
+            position: "absolute", inset: 0,
+            display: "flex", flexDirection: "column",
+            visibility: mode === "tv" ? "visible" : "hidden",
+            pointerEvents: mode === "tv" ? "auto" : "none",
+          }}>
           {/* Video */}
           <div style={{ flex: 1, background: "#000", position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
             {current && (
@@ -269,7 +275,7 @@ export default function TVApp() {
           </div>
           {/* Info bar */}
           <div style={{ padding: "8px 12px", background: "#111", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
-            <div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 11, fontWeight: 700, lineHeight: 1.3, color: "#fff", flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                 {current?.title}
               </div>
@@ -280,13 +286,18 @@ export default function TVApp() {
             <button onClick={next} style={{
               background: "transparent", border: "1px solid #444",
               color: "#fff", padding: "4px 10px", cursor: "pointer",
-              fontFamily: "monospace", fontSize: 10, flexShrink: 0,
+              fontFamily: "monospace", fontSize: 10, flexShrink: 0, marginLeft: 12,
             }}>⏭ NEXT</button>
           </div>
         </div>
-      ) : (
-        /* ── RSS/FEED MODE ── */
-        <div style={{ flex: 1, overflowY: "auto" }}>
+
+          {/* ── RSS/FEED MODE ── */}
+          <div style={{
+            position: "absolute", inset: 0, overflowY: "auto",
+            background: "#0a0a0a",
+            visibility: mode === "rss" ? "visible" : "hidden",
+            pointerEvents: mode === "rss" ? "auto" : "none",
+          }}>
           {rssVideos.map((v, i) => (
             <div key={i} onClick={() => { setCurrent(v); setMode("tv"); }}
               style={{ display: "flex", gap: 10, padding: "8px 10px", borderBottom: "1px solid #1a1a1a", cursor: "pointer" }}
@@ -304,6 +315,7 @@ export default function TVApp() {
               </div>
             </div>
           ))}
+          </div>
         </div>
       )}
     </div>

@@ -16,6 +16,7 @@ export interface OSWindowProps {
   onClose: () => void;
   onMinimize: () => void;
   minimized: boolean;
+  keepMountedWhenMinimized?: boolean;
   zIndex: number;
 }
 
@@ -31,6 +32,7 @@ export default function OSWindow({
   onClose,
   onMinimize,
   minimized,
+  keepMountedWhenMinimized = false,
   zIndex,
 }: OSWindowProps) {
   const dragControls = useDragControls();
@@ -39,7 +41,7 @@ export default function OSWindow({
   const x = useMotionValue(0);
   const y = useMotionValue(0);
 
-  if (minimized) return null;
+  if (minimized && !keepMountedWhenMinimized) return null;
 
   const titleBarBg = focused ? "#1a1a1a" : "#8a8480";
 
@@ -74,6 +76,8 @@ export default function OSWindow({
           borderRadius: 0,
           userSelect: "none",
           display: "flex",
+          visibility: minimized ? "hidden" : "visible",
+          pointerEvents: minimized ? "none" : "auto",
           flexDirection: "column",
           transition: "box-shadow 0.1s, width 0.15s, height 0.15s",
           ...maxStyle,
