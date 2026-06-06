@@ -110,7 +110,8 @@ export default function RadioApp() {
   const bars = [3, 6, 9, 7, 5, 8, 6, 4, 7, 5, 3, 6];
 
   return (
-    <div style={{ padding: "16px", fontFamily: "monospace", fontSize: 12, display: "flex", flexDirection: "column", height: "100%", gap: 12 }}>
+    <div style={{ height: "100%", display: "flex", justifyContent: "center", overflowY: "auto" }}>
+    <div style={{ padding: "16px", fontFamily: "monospace", fontSize: 12, display: "flex", flexDirection: "column", width: "100%", maxWidth: 360, gap: 12 }}>
 
       {/* Now playing */}
       <div style={{ borderBottom: "2px solid #1a1a1a", paddingBottom: 12 }}>
@@ -212,6 +213,7 @@ export default function RadioApp() {
           </button>
         </div>
       </div>
+    </div>
     </div>
   );
 }
