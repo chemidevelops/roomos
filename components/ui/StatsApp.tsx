@@ -131,7 +131,7 @@ export default function StatsApp() {
                 const h = Math.max(2, Math.round((dayTotal / maxDay) * 54));
                 return (
                   <div key={date} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2, justifyContent: "flex-end" }}>
-                    <div style={{ width: "100%", height: h, background: "#000080" }} title={fmtTime(dayTotal)} />
+                    <div style={{ width: "100%", height: h, background: "#4472C4", border: "1px solid #2255aa" }} title={fmtTime(dayTotal)} />
                     <div style={{ fontSize: 9, color: "#444" }}>{date.slice(8)}</div>
                   </div>
                 );
