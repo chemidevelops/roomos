@@ -386,9 +386,9 @@ export default function TerminalApp({ onOpenApp = () => {} }: TerminalAppProps) 
     <div
       onClick={handleContainerClick}
       style={{
-        background: "#0a0a0a",
-        color: "#00ff41",
-        fontFamily: "var(--font-jetbrains-mono), monospace",
+        background: "#1e1e1e",
+        color: "#f0f0f0",
+        fontFamily: "var(--font-jetbrains-mono), 'JetBrains Mono', 'Fira Code', monospace",
         fontSize: "13px",
         display: "flex",
         flexDirection: "column",
@@ -403,20 +403,28 @@ export default function TerminalApp({ onOpenApp = () => {} }: TerminalAppProps) 
         style={{
           flex: 1,
           overflowY: "auto",
-          padding: "12px 14px 4px",
-          lineHeight: "1.6",
+          padding: "12px 16px 4px",
+          lineHeight: "1.65",
         }}
       >
         {lines.map((line, i) => (
           <div
             key={i}
             style={{
-              color: line.type === "input" ? "#00ff41" : "#00cc33",
+              color: line.type === "input" ? "#f0f0f0" : "#aaaaaa",
               whiteSpace: "pre-wrap",
               wordBreak: "break-all",
             }}
           >
-            {line.text || " "}
+            {line.type === "input" ? (
+              <>
+                <span style={{ color: "#5af78e" }}>roomos</span>
+                <span style={{ color: "#888" }}>:</span>
+                <span style={{ color: "#57c7ff" }}>~</span>
+                <span style={{ color: "#888" }}> $ </span>
+                <span>{line.text.replace(/^C:\\ROOMOS>\s*/, "")}</span>
+              </>
+            ) : line.text || " "}
           </div>
         ))}
         <div ref={bottomRef} />
@@ -428,13 +436,16 @@ export default function TerminalApp({ onOpenApp = () => {} }: TerminalAppProps) 
         style={{
           display: "flex",
           alignItems: "center",
-          padding: "4px 14px 12px",
-          borderTop: "1px solid #1a3a1a",
+          padding: "4px 16px 12px",
+          borderTop: "1px solid #333",
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <span style={{ color: "#00ff41", whiteSpace: "nowrap", marginRight: "4px" }}>
-          C:\ROOMOS&gt;&nbsp;
+        <span style={{ whiteSpace: "nowrap", marginRight: "4px" }}>
+          <span style={{ color: "#5af78e" }}>roomos</span>
+          <span style={{ color: "#888" }}>:</span>
+          <span style={{ color: "#57c7ff" }}>~</span>
+          <span style={{ color: "#888" }}> $ </span>
         </span>
         <input
           ref={inputRef}
@@ -450,10 +461,10 @@ export default function TerminalApp({ onOpenApp = () => {} }: TerminalAppProps) 
             background: "transparent",
             border: "none",
             outline: "none",
-            color: "#00ff41",
-            fontFamily: "var(--font-jetbrains-mono), monospace",
+            color: "#f0f0f0",
+            fontFamily: "var(--font-jetbrains-mono), 'JetBrains Mono', monospace",
             fontSize: "13px",
-            caretColor: "#00ff41",
+            caretColor: "#f0f0f0",
           }}
         />
       </form>
