@@ -177,20 +177,26 @@ export default function TVApp() {
               <video
                 key={streamUrl}
                 src={streamUrl}
-                autoPlay
-                muted
                 controls
                 playsInline
                 onEnded={() => nextRef.current()}
+                onTimeUpdate={e => {
+                  const v = e.currentTarget;
+                  if (v.duration && v.currentTime >= v.duration - 0.5) nextRef.current();
+                }}
                 ref={el => {
                   if (!el) return;
                   el.muted = true;
-                  el.play().then(() => {
-                    // Desmutear al primer toque/click del usuario
-                    const unmute = () => { el.muted = false; el.removeEventListener("click", unmute); el.removeEventListener("touchstart", unmute); document.removeEventListener("click", unmute); };
-                    el.addEventListener("click", unmute, { once: true });
-                    document.addEventListener("click", unmute, { once: true });
-                  }).catch(() => {});
+                  const tryPlay = () => {
+                    el.play().then(() => {
+                      // Desmutear al primer toque
+                      const unmute = () => { el.muted = false; };
+                      document.addEventListener("click", unmute, { once: true });
+                      document.addEventListener("touchstart", unmute, { once: true });
+                    }).catch(() => {});
+                  };
+                  if (el.readyState >= 3) tryPlay();
+                  else el.addEventListener("canplay", tryPlay, { once: true });
                 }}
                 style={{ width: "100%", height: "100%", objectFit: "contain" }}
               />
@@ -210,7 +216,7 @@ export default function TVApp() {
           {/* Info bar */}
           <div style={{ padding: "8px 12px", background: "#111", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, lineHeight: 1.3, color: "#fff", flex: 1 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, lineHeight: 1.3, color: "#fff", flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                 {current?.title}
               </div>
               <div style={{ fontSize: 9, color: "#666", marginTop: 2 }}>
