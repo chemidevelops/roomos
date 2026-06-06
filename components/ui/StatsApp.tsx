@@ -125,10 +125,10 @@ export default function StatsApp() {
         {last7.length > 0 && (
           <div style={{ marginBottom: 8 }}>
             <div style={{ ...W.blue, padding: "2px 6px", marginBottom: 2 }}>GRÁFICO — Últimos 7 días</div>
-            <div style={{ ...W.sunken, background: "#fff", padding: "8px 6px", display: "flex", alignItems: "flex-end", gap: 6, height: 70 }}>
+            <div style={{ ...W.sunken, background: "#fff", padding: "4px 6px", display: "flex", alignItems: "flex-end", gap: 4, height: 70, overflow: "hidden" }}>
               {last7.map(date => {
                 const dayTotal = (data.byDay ?? []).filter(r => r.date === date).reduce((a, r) => a + r.total, 0);
-                const h = Math.max(2, Math.round((dayTotal / maxDay) * 54));
+                const h = Math.max(2, Math.round((dayTotal / maxDay) * 44));
                 return (
                   <div key={date} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2, justifyContent: "flex-end" }}>
                     <div style={{ width: "100%", height: h, background: "#4472C4", border: "1px solid #2255aa" }} title={fmtTime(dayTotal)} />
