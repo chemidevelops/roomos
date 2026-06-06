@@ -173,9 +173,9 @@ export default function TVApp() {
     fetch(`/api/stream?v=${current.id}`, { method: "HEAD" })
       .then(r => {
         if (r.ok) setStreamUrl(`/api/stream?v=${current.id}`);
-        else { setStreamUrl(null); setTimeout(() => nextRef.current(), 500); }
+        else setStreamUrl(null);
       })
-      .catch(() => { setStreamUrl(null); setTimeout(() => nextRef.current(), 500); })
+      .catch(() => setStreamUrl(null))
       .finally(() => setStreamLoading(false));
   }, [current]);
 
@@ -274,8 +274,13 @@ export default function TVApp() {
                 style={{ width: "100%", height: "100%", objectFit: "contain" }}
               />
             )}
-            {!streamLoading && !streamUrl && (
-              <div style={{ color: "#333", fontSize: 11, fontFamily: "monospace" }}>Cargando...</div>
+            {!streamLoading && !streamUrl && current && (
+              <div style={{ color: "#555", fontSize: 11, fontFamily: "monospace", textAlign: "center", padding: 20 }}>
+                Vídeo no disponible.<br/>
+                <button onClick={() => nextRef.current()} style={{ marginTop: 8, background: "#333", color: "#fff", border: "none", padding: "4px 12px", cursor: "pointer", fontFamily: "monospace", fontSize: 10 }}>
+                  Siguiente →
+                </button>
+              </div>
             )}
           </div>
           {/* Info bar */}
