@@ -71,30 +71,6 @@ function makeWindows(vw: number): WindowState[] {
 
   return [
     {
-      id: "now",
-      title: "NOW",
-      icon: "📺",
-      open: true,
-      minimized: false,
-      focused: true,
-      zIndex: 11,
-      position: mobile ? { x: 8, y: 48 } : { x: 160, y: 40 },
-      width: W ?? 400,
-      height: "auto",
-    },
-    {
-      id: "focus",
-      title: "Focus Timer",
-      icon: "⏱",
-      open: !mobile,
-      minimized: false,
-      focused: false,
-      zIndex: 10,
-      position: mobile ? { x: 8, y: 80 } : { x: 580, y: 40 },
-      width: W ?? 340,
-      height: "auto",
-    },
-    {
       id: "home",
       title: "Home",
       icon: "🏠",
@@ -104,18 +80,6 @@ function makeWindows(vw: number): WindowState[] {
       zIndex: 9,
       position: mobile ? { x: 8, y: 60 } : { x: 220, y: 80 },
       width: W ?? 440,
-      height: "auto",
-    },
-    {
-      id: "backlog",
-      title: "Backlog",
-      icon: "📋",
-      open: false,
-      minimized: false,
-      focused: false,
-      zIndex: 8,
-      position: mobile ? { x: 8, y: 60 } : { x: 300, y: 100 },
-      width: W ?? 520,
       height: "auto",
     },
     {
@@ -200,18 +164,6 @@ function makeWindows(vw: number): WindowState[] {
       zIndex: 1,
       position: mobile ? { x: 8, y: 60 } : { x: 180, y: 60 },
       width: W ?? 480,
-      height: "auto",
-    },
-    {
-      id: "alarms",
-      title: "Alarms",
-      icon: "⏰",
-      open: false,
-      minimized: false,
-      focused: false,
-      zIndex: 1,
-      position: mobile ? { x: 8, y: 60 } : { x: 220, y: 100 },
-      width: W ?? 340,
       height: "auto",
     },
     {
@@ -387,10 +339,8 @@ function HomeWindowContent({ onOpenWindow }: { onOpenWindow: (id: string) => voi
 ───────────────────────────────────────────────────────────── */
 function WindowContent({ id, onOpenWindow }: { id: string; onOpenWindow: (id: string) => void }) {
   switch (id) {
-    case "now":      return <NowWindowContent />;
-    case "focus":    return <div style={{ padding: "16px" }}><FocusTimer compact={false} /></div>;
+
     case "home":     return <HomeWindowContent onOpenWindow={onOpenWindow} />;
-    case "backlog":  return <BacklogApp />;
     case "notes":    return <NotesApp />;
     case "calendar": return <ScheduleApp />;
     case "settings":  return <SettingsApp />;
@@ -529,7 +479,7 @@ function Desktop() {
     return positions;
   }
 
-  const ICON_STORAGE_VERSION = "v3";
+  const ICON_STORAGE_VERSION = "v4";
 
   const [iconPositions, setIconPositions] = useState<Record<string, { x: number; y: number }>>(() => {
     if (typeof window === "undefined") return {};
