@@ -36,7 +36,6 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-const PLAYER_BASE = "https://piped.video";
 
 export default function TVApp() {
   const [activeChannel, setActiveChannel] = useState(CHANNELS[0]);
@@ -45,6 +44,8 @@ export default function TVApp() {
   const [queue, setQueue] = useState<Video[]>([]);
   const [current, setCurrent] = useState<Video | null>(null);
   const [loading, setLoading] = useState(true);
+  const [streamUrl, setStreamUrl] = useState<string | null>(null);
+  const [streamLoading, setStreamLoading] = useState(false);
   const [rssVideos, setRssVideos] = useState<Video[]>([]);
 
   // Cargar videos de todos los canales
@@ -69,6 +70,18 @@ export default function TVApp() {
     });
   }, [activeChannel]);
 
+  // Fetch stream URL cuando cambia el video
+  useEffect(() => {
+    if (!current) return;
+    setStreamUrl(null);
+    setStreamLoading(true);
+    fetch(`/api/stream?v=${current.id}`)
+      .then(r => r.json())
+      .then(d => { if (d.url) setStreamUrl(d.url); })
+      .catch(() => {})
+      .finally(() => setStreamLoading(false));
+  }, [current]);
+
   // Siguiente video
   function next() {
     setQueue(q => {
@@ -81,10 +94,6 @@ export default function TVApp() {
 
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" });
-
-  const embedUrl = current
-    ? `${PLAYER_BASE}/embed/${current.id}?autoplay=1&modestbranding=1&rel=0`
-    : null;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", fontFamily: "monospace", fontSize: 12, background: "#0a0a0a", color: "#fff" }}>
@@ -124,16 +133,27 @@ export default function TVApp() {
         /* ── TV MODE ── */
         <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
           {/* Video */}
-          <div style={{ flex: 1, background: "#000", position: "relative" }}>
-            {embedUrl && (
-              <iframe
-                key={current?.id}
-                src={embedUrl}
-                style={{ width: "100%", height: "100%", border: "none" }}
-                allow="autoplay; fullscreen"
-                allowFullScreen
-                onLoad={() => {}}
+          <div style={{ flex: 1, background: "#000", position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            {streamLoading && (
+              <div style={{ color: "#555", fontSize: 12, fontFamily: "monospace" }}>Cargando stream...</div>
+            )}
+            {streamUrl && (
+              <video
+                key={streamUrl}
+                src={streamUrl}
+                autoPlay
+                controls
+                onEnded={next}
+                style={{ width: "100%", height: "100%", objectFit: "contain" }}
               />
+            )}
+            {!streamLoading && !streamUrl && (
+              <div style={{ color: "#555", fontSize: 11, fontFamily: "monospace", textAlign: "center", padding: 20 }}>
+                Error cargando video.<br />
+                <button onClick={next} style={{ marginTop: 8, background: "#333", color: "#fff", border: "none", padding: "4px 12px", cursor: "pointer", fontFamily: "monospace" }}>
+                  Siguiente →
+                </button>
+              </div>
             )}
           </div>
           {/* Info bar */}
