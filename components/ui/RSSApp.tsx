@@ -17,17 +17,36 @@ const FEEDS = [
 
 const scrollbar: React.CSSProperties = { overflowY: "auto", scrollbarWidth: "thin" };
 
-const strip = (html: string) => html
-  .replace(/<script[\s\S]*?<\/script>/gi, "")   // quita bloques <script>
-  .replace(/<style[\s\S]*?<\/style>/gi, "")      // quita bloques <style>
-  .replace(/<[^>]*>/g, " ")                      // quita etiquetas HTML
-  .replace(/\(function\s*\([\s\S]*?\}\s*\)\s*[;(]/g, "")  // quita IIFEs
-  .replace(/\bvar\s+\w+\s*=[\s\S]{0,200}?;/g, "")         // quita var x = ...
-  .replace(/\{[^}]{0,500}\}/g, "")              // quita bloques {}
-  .replace(/https?:\/\/\S+/g, "")               // quita URLs
-  .replace(/[;()[\]]/g, " ")                    // quita restos de JS
-  .replace(/\s{2,}/g, " ")
-  .trim();
+function strip(html: string): string[] {
+  const clean = html
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n\n")
+    .replace(/<\/li>/gi, "\n")
+    .replace(/<[^>]*>/g, "")
+    .replace(/\(function\s*\([\s\S]*?\}\s*\)\s*[;(]/g, "")
+    .replace(/\bvar\s+\w+\s*=[\s\S]{0,200}?;/g, "")
+    .replace(/\{[^}]{0,300}\}/g, "")
+    .replace(/https?:\/\/\S+/g, "")
+    .replace(/[;[\]]/g, " ")
+    // Decodificar entidades HTML comunes
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&[a-z]+;/g, " ")
+    .replace(/[ \t]{2,}/g, " ")
+    .trim();
+
+  // Dividir en párrafos
+  return clean
+    .split(/\n{2,}/)
+    .map(p => p.replace(/\n/g, " ").trim())
+    .filter(p => p.length > 20);
+}
 
 const formatDate = (d: string) =>
   new Date(d).toLocaleDateString("es-ES", { day: "numeric", month: "short" });
@@ -144,18 +163,26 @@ export default function RSSApp() {
       )}
       {selected ? (
         <>
-          <div style={{ fontSize: 10, color: "#888", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+          <div style={{ fontSize: 10, color: "#999", marginBottom: 8, fontFamily: "monospace", letterSpacing: "0.08em", textTransform: "uppercase" }}>
             {selected.feed} · {formatDate(selected.pubDate)}
           </div>
-          <h2 style={{ fontSize: 15, fontWeight: 700, marginBottom: 12, lineHeight: 1.3 }}>{selected.title}</h2>
-          <p style={{ lineHeight: 1.6, color: "#333", fontSize: 12 }}>{strip(selected.description)}</p>
+          <h2 style={{ fontSize: 17, fontWeight: 700, marginBottom: 14, lineHeight: 1.35, fontFamily: "system-ui, -apple-system, sans-serif", color: "#111" }}>
+            {selected.title}
+          </h2>
+          <div style={{ maxWidth: 620 }}>
+            {strip(selected.description).map((para, i) => (
+              <p key={i} style={{ fontFamily: "Georgia, serif", fontSize: 13.5, lineHeight: 1.75, color: "#222", marginBottom: 14 }}>
+                {para}
+              </p>
+            ))}
+          </div>
           <a href={selected.link} target="_blank" rel="noopener noreferrer"
-            style={{ display: "inline-block", marginTop: 16, fontSize: 11, color: "#888", textDecoration: "underline" }}>
+            style={{ display: "inline-block", marginTop: 8, fontSize: 11, color: "#999", fontFamily: "monospace" }}>
             Ver en web →
           </a>
         </>
       ) : (
-        <div style={{ color: "#aaa", paddingTop: 40, textAlign: "center", fontSize: 12 }}>Selecciona un artículo</div>
+        <div style={{ color: "#bbb", paddingTop: 40, textAlign: "center", fontSize: 12, fontFamily: "monospace" }}>Selecciona un artículo</div>
       )}
     </div>
   );

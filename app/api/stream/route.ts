@@ -11,7 +11,7 @@ async function resolve(videoId: string): Promise<string> {
   if (cached && Date.now() - cached.ts < TTL) return cached.url;
 
   const { stdout } = await execAsync(
-    `yt-dlp -f 'best[height<=720][ext=mp4]/best[height<=720]/best' --get-url 'https://www.youtube.com/watch?v=${videoId}'`,
+    `yt-dlp --cookies /root/yt-cookies.txt -f 'best[height<=720][ext=mp4]/best[height<=720]/best' --get-url 'https://www.youtube.com/watch?v=${videoId}'`,
     { timeout: 25000 }
   );
   const url = stdout.trim().split("\n")[0];
