@@ -72,11 +72,17 @@ export default function OSWindow({
           borderRadius: 0,
           userSelect: "none",
           display: "flex",
-          visibility: minimized ? "hidden" : "visible",
+          opacity: minimized ? 0 : 1,
           pointerEvents: minimized ? "none" : "auto",
           flexDirection: "column",
           transition: "box-shadow 0.1s, width 0.15s, height 0.15s",
           ...maxStyle,
+          ...(minimized ? {
+            position: "fixed" as const,
+            top: -100000,
+            left: -100000,
+            zIndex: -1,
+          } : {}),
         }}
       >
         {/* Title bar */}
