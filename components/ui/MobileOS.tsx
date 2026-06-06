@@ -12,12 +12,12 @@ const TVApp = dynamic(() => import("./TVApp"), { ssr: false });
 type AppId = "radio" | "tv" | "rss" | "notes" | "calendar" | "snake" | null;
 
 const APPS: { id: AppId; icon: string; label: string }[] = [
-  { id: "calendar", icon: "📅", label: "AGENDA" },
-  { id: "radio",    icon: "📻", label: "RADIO" },
-  { id: "tv",       icon: "📺", label: "TV" },
-  { id: "rss",      icon: "📡", label: "FEEDS" },
-  { id: "notes",    icon: "📓", label: "NOTAS" },
-  { id: "snake",    icon: "🐍", label: "SNAKE" },
+  { id: "calendar", icon: "▦", label: "AGENDA" },
+  { id: "radio",    icon: "◉", label: "RADIO" },
+  { id: "tv",       icon: "▣", label: "TV" },
+  { id: "rss",      icon: "◈", label: "FEEDS" },
+  { id: "notes",    icon: "▤", label: "NOTES" },
+  { id: "snake",    icon: "▶", label: "SNAKE" },
 ];
 
 function AppComponent({ id }: { id: AppId }) {
@@ -30,129 +30,228 @@ function AppComponent({ id }: { id: AppId }) {
   return null;
 }
 
+// Nokia pixel font via CSS
+const SCREEN_BG = "#0d1a0d";
+const SCREEN_FG = "#7ec850";
+const SCREEN_DIM = "#3a6b28";
+const PHONE_BG = "#1c1c1e";
+const BTN_BG = "#2a2a2c";
+const BTN_BORDER = "#3a3a3c";
+const BTN_SHADOW = "#111";
+
 export default function MobileOS() {
   const [open, setOpen] = useState<AppId>(null);
+  const [selected, setSelected] = useState(0);
   const [time, setTime] = useState("");
+  const [date, setDate] = useState("");
 
   useEffect(() => {
     const tick = () => {
       const now = new Date();
       setTime(now.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }));
+      setDate(now.toLocaleDateString("es-ES", { weekday: "short", day: "numeric", month: "short" }).toUpperCase());
     };
     tick();
     const id = setInterval(tick, 10000);
     return () => clearInterval(id);
   }, []);
 
+  function openApp(id: AppId) { setOpen(id); }
+  function back() { setOpen(null); }
+  function navUp() { setSelected(s => (s - 1 + APPS.length) % APPS.length); }
+  function navDown() { setSelected(s => (s + 1) % APPS.length); }
+  function navOk() { openApp(APPS[selected].id); }
+
   return (
     <div style={{
       width: "100vw", height: "100dvh",
-      background: "#0f0f0f",
+      background: PHONE_BG,
       display: "flex", flexDirection: "column",
-      fontFamily: "monospace",
+      fontFamily: "'Courier New', 'Lucida Console', monospace",
       overflow: "hidden",
-      color: "#fff",
+      userSelect: "none",
     }}>
-      {open ? (
-        /* ── App view ── */
-        <>
-          {/* App bar */}
-          <div style={{
-            height: 44, minHeight: 44,
-            background: "#1a1a1a",
-            display: "flex", alignItems: "center",
-            padding: "0 12px",
-            borderBottom: "1px solid #333",
-            flexShrink: 0,
-          }}>
-            <button onClick={() => setOpen(null)} style={{
-              background: "none", border: "none", color: "#fff",
-              fontSize: 18, cursor: "pointer", padding: "0 8px 0 0",
-              fontFamily: "monospace",
-            }}>←</button>
-            <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase" }}>
-              {APPS.find(a => a.id === open)?.icon} {APPS.find(a => a.id === open)?.label}
-            </span>
-          </div>
-          {/* App content */}
-          <div style={{ flex: 1, overflow: "hidden" }}>
-            <AppComponent id={open} />
-          </div>
-        </>
-      ) : (
-        /* ── Home screen ── */
-        <>
-          {/* Status bar */}
-          <div style={{
-            padding: "8px 16px 4px",
-            display: "flex", justifyContent: "space-between", alignItems: "center",
-            flexShrink: 0,
-          }}>
-            <span style={{ fontSize: 10, color: "#555", letterSpacing: "0.15em" }}>roomOS</span>
-            <span style={{ fontSize: 10, color: "#555" }}>●●●●○</span>
-          </div>
 
-          {/* Clock */}
-          <div style={{ textAlign: "center", padding: "20px 0 8px", flexShrink: 0 }}>
-            <div style={{ fontSize: 52, fontWeight: 700, letterSpacing: "-2px", lineHeight: 1, color: "#fff" }}>
-              {time}
+      {/* ── SCREEN ── */}
+      <div style={{
+        flex: 1,
+        background: SCREEN_BG,
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+        borderBottom: `2px solid ${BTN_BORDER}`,
+        position: "relative",
+      }}>
+        {open ? (
+          /* App view */
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+            {/* App title bar */}
+            <div style={{
+              padding: "4px 10px",
+              background: SCREEN_FG,
+              color: SCREEN_BG,
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: "0.15em",
+              display: "flex",
+              justifyContent: "space-between",
+              flexShrink: 0,
+            }}>
+              <span>{APPS.find(a => a.id === open)?.icon} {APPS.find(a => a.id === open)?.label}</span>
+              <span style={{ opacity: 0.6 }}>roomOS</span>
             </div>
-            <div style={{ fontSize: 11, color: "#444", marginTop: 6, letterSpacing: "0.1em" }}>
-              {new Date().toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" }).toUpperCase()}
+            <div style={{ flex: 1, overflow: "hidden", background: "#fff" }}>
+              <AppComponent id={open} />
             </div>
           </div>
+        ) : (
+          /* Home screen */
+          <>
+            {/* Status bar */}
+            <div style={{
+              padding: "6px 10px 2px",
+              display: "flex",
+              justifyContent: "space-between",
+              fontSize: 9,
+              color: SCREEN_DIM,
+              letterSpacing: "0.1em",
+              flexShrink: 0,
+            }}>
+              <span>roomOS</span>
+              <span>▐▐▐▐</span>
+            </div>
 
-          {/* Divider */}
-          <div style={{ height: 1, background: "#1a1a1a", margin: "12px 16px", flexShrink: 0 }} />
+            {/* Clock */}
+            <div style={{ textAlign: "center", padding: "16px 0 8px", flexShrink: 0 }}>
+              <div style={{
+                fontSize: 48,
+                fontWeight: 700,
+                color: SCREEN_FG,
+                letterSpacing: "2px",
+                lineHeight: 1,
+                textShadow: `0 0 12px ${SCREEN_FG}44`,
+              }}>
+                {time}
+              </div>
+              <div style={{ fontSize: 10, color: SCREEN_DIM, marginTop: 6, letterSpacing: "0.15em" }}>
+                {date}
+              </div>
+            </div>
 
-          {/* App grid */}
-          <div style={{
-            flex: 1,
-            display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
-            gap: 2,
-            padding: "0 8px 16px",
-            alignContent: "start",
-            overflowY: "auto",
-          }}>
-            {APPS.map(app => (
-              <button key={app.id} onClick={() => setOpen(app.id)} style={{
-                background: "none", border: "none",
-                display: "flex", flexDirection: "column",
-                alignItems: "center", justifyContent: "center",
-                padding: "14px 8px",
-                cursor: "pointer",
-                gap: 6,
-                borderRadius: 0,
-                color: "#fff",
-              }}
-                onPointerDown={e => (e.currentTarget.style.background = "#1a1a1a")}
-                onPointerUp={e => (e.currentTarget.style.background = "none")}
-                onPointerLeave={e => (e.currentTarget.style.background = "none")}
-              >
-                <span style={{ fontSize: 28 }}>{app.icon}</span>
-                <span style={{ fontSize: 9, letterSpacing: "0.12em", color: "#888" }}>{app.label}</span>
-              </button>
-            ))}
+            {/* Divider */}
+            <div style={{ height: 1, background: SCREEN_DIM, margin: "6px 14px", opacity: 0.4 }} />
+
+            {/* Menu list */}
+            <div style={{ flex: 1, overflowY: "auto", padding: "4px 0" }}>
+              {APPS.map((app, i) => (
+                <div
+                  key={app.id}
+                  onClick={() => openApp(app.id)}
+                  onPointerDown={() => setSelected(i)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    padding: "10px 16px",
+                    background: selected === i ? SCREEN_FG : "transparent",
+                    color: selected === i ? SCREEN_BG : SCREEN_FG,
+                    cursor: "pointer",
+                    transition: "background 0.05s",
+                  }}
+                >
+                  <span style={{ fontSize: 16, width: 20, textAlign: "center" }}>{app.icon}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.12em" }}>{app.label}</span>
+                  {selected === i && <span style={{ marginLeft: "auto", fontSize: 10 }}>▶</span>}
+                </div>
+              ))}
+            </div>
+
+            {/* Bottom softkey labels */}
+            <div style={{
+              display: "flex", justifyContent: "space-between",
+              padding: "4px 16px",
+              fontSize: 9, color: SCREEN_DIM,
+              letterSpacing: "0.1em",
+              flexShrink: 0,
+            }}>
+              <span>MENU</span>
+              <span>OK</span>
+              <span>EXIT</span>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* ── BUTTONS ── */}
+      <div style={{
+        background: PHONE_BG,
+        padding: "10px 12px 16px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 8,
+        flexShrink: 0,
+      }}>
+        {/* Soft keys + D-pad row */}
+        {open ? (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+            <PhoneBtn label="◀ BACK" onPress={back} wide />
+            <PhoneBtn label="▲" onPress={navUp} />
+            <PhoneBtn label="" onPress={() => {}} />
           </div>
-
-          {/* Bottom soft keys */}
-          <div style={{
-            height: 44,
-            display: "flex",
-            borderTop: "1px solid #1a1a1a",
-            flexShrink: 0,
-          }}>
-            <button style={{ flex: 1, background: "none", border: "none", color: "#555", fontSize: 10, letterSpacing: "0.1em", cursor: "default", fontFamily: "monospace" }}>
-              MENU
-            </button>
-            <div style={{ width: 1, background: "#1a1a1a" }} />
-            <button style={{ flex: 1, background: "none", border: "none", color: "#555", fontSize: 10, letterSpacing: "0.1em", cursor: "default", fontFamily: "monospace" }}>
-              roomOS
-            </button>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+            <PhoneBtn label="MENU" onPress={() => {}} />
+            <PhoneBtn label="▲" onPress={navUp} />
+            <PhoneBtn label="C" onPress={() => {}} />
           </div>
-        </>
-      )}
+        )}
+
+        {/* Center nav */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+          <PhoneBtn label="◀" onPress={() => {}} />
+          <PhoneBtn label={open ? "BACK" : "OK"} onPress={open ? back : navOk} accent />
+          <PhoneBtn label="▶" onPress={() => {}} />
+        </div>
+
+        {/* Down row */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+          <PhoneBtn label="" onPress={() => {}} />
+          <PhoneBtn label="▼" onPress={navDown} />
+          <PhoneBtn label="" onPress={() => {}} />
+        </div>
+      </div>
     </div>
+  );
+}
+
+function PhoneBtn({ label, onPress, accent, wide }: {
+  label: string; onPress: () => void; accent?: boolean; wide?: boolean;
+}) {
+  const [pressed, setPressed] = useState(false);
+  return (
+    <button
+      onPointerDown={() => { setPressed(true); onPress(); }}
+      onPointerUp={() => setPressed(false)}
+      onPointerLeave={() => setPressed(false)}
+      style={{
+        background: pressed ? BTN_BORDER : (accent ? SCREEN_DIM : BTN_BG),
+        color: accent ? SCREEN_FG : "#888",
+        border: `1px solid ${BTN_BORDER}`,
+        borderBottom: pressed ? `1px solid ${BTN_BORDER}` : `3px solid ${BTN_SHADOW}`,
+        borderRadius: 6,
+        padding: "10px 4px",
+        fontSize: 11,
+        fontFamily: "'Courier New', monospace",
+        fontWeight: 700,
+        letterSpacing: "0.05em",
+        cursor: "pointer",
+        gridColumn: wide ? "span 1" : undefined,
+        transform: pressed ? "translateY(2px)" : "none",
+        transition: "transform 0.05s",
+        minHeight: 40,
+      }}
+    >
+      {label}
+    </button>
   );
 }
