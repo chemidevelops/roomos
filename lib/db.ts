@@ -44,6 +44,15 @@ export function getDb(): Database.Database {
       end_min   INTEGER NOT NULL,
       notes     TEXT NOT NULL DEFAULT ''
     );
+
+    CREATE TABLE IF NOT EXISTS calendar_events (
+      id        TEXT PRIMARY KEY,
+      title     TEXT NOT NULL,
+      date      TEXT NOT NULL,
+      time      TEXT NOT NULL DEFAULT '',
+      notes     TEXT NOT NULL DEFAULT '',
+      created_at INTEGER NOT NULL
+    );
   `);
 
   return _db;

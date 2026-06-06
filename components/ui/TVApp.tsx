@@ -36,7 +36,7 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-const INVIDIOUS = "https://inv.nadeko.net";
+const INVIDIOUS = "https://invidious.nerdvpn.de";
 
 export default function TVApp() {
   const [activeChannel, setActiveChannel] = useState(CHANNELS[0]);

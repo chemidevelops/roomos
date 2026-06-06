@@ -15,6 +15,7 @@ import CalculatorApp from "@/components/ui/CalculatorApp";
 import StatsApp from "@/components/ui/StatsApp";
 import AlarmApp from "@/components/ui/AlarmApp";
 import RSSApp from "@/components/ui/RSSApp";
+import CalendarApp from "@/components/ui/CalendarApp";
 import RadioApp from "@/components/ui/RadioApp";
 import TVApp from "@/components/ui/TVApp";
 import StickyLayer, { addStickyRef } from "@/components/ui/StickyLayer";
@@ -48,18 +49,14 @@ const ICON_W = 80;
    Icon definitions
 ───────────────────────────────────────────────────────────── */
 const APP_ICONS = [
-  { id: "home",     icon: "🏠", label: "Home" },
-  { id: "now",      icon: "📺", label: "Now" },
-  { id: "focus",    icon: "⏱", label: "Focus" },
-  { id: "backlog",  icon: "📋", label: "Backlog" },
-  { id: "notes",    icon: "📓", label: "Notes" },
-  { id: "calendar", icon: "📅", label: "Schedule" },
-  { id: "settings", icon: "⚙️",  label: "Settings" },
-  { id: "solitaire",   icon: "🃏", label: "Solitaire" },
+  { id: "home",       icon: "🏠", label: "Home" },
+  { id: "calendar",   icon: "📅", label: "Agenda" },
+  { id: "notes",      icon: "📓", label: "Notes" },
+  { id: "settings",   icon: "⚙️",  label: "Settings" },
+  { id: "solitaire",  icon: "🃏", label: "Solitaire" },
   { id: "terminal",   icon: "💻", label: "Terminal" },
   { id: "calculator", icon: "🧮", label: "Calc" },
   { id: "stats",      icon: "📊", label: "Stats" },
-  { id: "alarms",     icon: "⏰", label: "Alarms" },
   { id: "rss",        icon: "📡", label: "RSS" },
   { id: "radio",      icon: "📻", label: "Radio" },
   { id: "tv",         icon: "📺", label: "TV" },
@@ -403,6 +400,7 @@ function WindowContent({ id, onOpenWindow }: { id: string; onOpenWindow: (id: st
     case "stats":       return <StatsApp />;
     case "alarms":      return <AlarmApp />;
     case "rss":         return <RSSApp />;
+    case "calendar":    return <CalendarApp />;
     case "radio":       return <RadioApp />;
     case "tv":          return <TVApp />;
     default:            return <div style={{ padding: "24px", textAlign: "center", color: "#6b6560" }}>{id}</div>;

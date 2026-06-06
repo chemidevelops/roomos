@@ -5,22 +5,18 @@ import dynamic from "next/dynamic";
 import RadioApp from "./RadioApp";
 import RSSApp from "./RSSApp";
 import NotesApp from "./NotesApp";
-import BacklogApp from "./BacklogApp";
-import FocusTimer from "./FocusTimer";
-import ScheduleApp from "./ScheduleApp";
+import CalendarApp from "./CalendarApp";
 import SnakeGame from "./SnakeGame";
 const TVApp = dynamic(() => import("./TVApp"), { ssr: false });
 
-type AppId = "radio" | "tv" | "rss" | "notes" | "backlog" | "schedule" | "focus" | "snake" | null;
+type AppId = "radio" | "tv" | "rss" | "notes" | "calendar" | "snake" | null;
 
 const APPS: { id: AppId; icon: string; label: string }[] = [
-  { id: "schedule", icon: "📅", label: "HOY" },
-  { id: "focus",    icon: "⏱",  label: "FOCUS" },
+  { id: "calendar", icon: "📅", label: "AGENDA" },
   { id: "radio",    icon: "📻", label: "RADIO" },
   { id: "tv",       icon: "📺", label: "TV" },
   { id: "rss",      icon: "📡", label: "FEEDS" },
   { id: "notes",    icon: "📓", label: "NOTAS" },
-  { id: "backlog",  icon: "📋", label: "BACKLOG" },
   { id: "snake",    icon: "🐍", label: "SNAKE" },
 ];
 
@@ -29,9 +25,7 @@ function AppComponent({ id }: { id: AppId }) {
   if (id === "tv")       return <TVApp />;
   if (id === "rss")      return <RSSApp />;
   if (id === "notes")    return <NotesApp />;
-  if (id === "backlog")  return <BacklogApp />;
-  if (id === "schedule") return <ScheduleApp />;
-  if (id === "focus")    return <FocusTimer />;
+  if (id === "calendar") return <CalendarApp />;
   if (id === "snake")    return <SnakeGame />;
   return null;
 }
