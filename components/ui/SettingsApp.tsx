@@ -12,6 +12,11 @@ interface Swatch {
 
 const SWATCHES: Swatch[] = [
   {
+    id: "retro-mac",
+    label: "★ Retro Mac",
+    preview: "#6b8fa8",
+  },
+  {
     id: "gradient-dark",
     label: "Deep Blue",
     preview: "linear-gradient(135deg, #1a1a2e 0%, #16213e 35%, #0f3460 65%, #1a1a2e 100%)",
@@ -36,11 +41,6 @@ const SWATCHES: Swatch[] = [
     label: "Amiga",
     preview: "linear-gradient(to bottom, #0055aa 50%, #ff8800 50%)",
   },
-  {
-    id: "retro-mac",
-    label: "Retro Mac",
-    preview: "#6b8fa8",
-  },
 ];
 
 export const WALLPAPER_STYLES: Record<WallpaperKey, string> = {
@@ -55,7 +55,7 @@ export const WALLPAPER_STYLES: Record<WallpaperKey, string> = {
 export const STORAGE_KEY = "roomos-wallpaper";
 
 export default function SettingsApp() {
-  const [current, setCurrent] = useState<WallpaperKey>("gradient-dark");
+  const [current, setCurrent] = useState<WallpaperKey>("retro-mac");
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY) as WallpaperKey | null;
@@ -73,7 +73,7 @@ export default function SettingsApp() {
     <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "20px" }}>
       <div>
         <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#6b6560", marginBottom: "12px" }}>
-          Wallpaper
+          Tema / Wallpaper
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
           {SWATCHES.map((sw) => (

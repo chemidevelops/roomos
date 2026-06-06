@@ -18,17 +18,18 @@ export default function NewsTicker() {
 
   return (
     <div style={{
-      position: "absolute",
-      bottom: 0,
+      position: "fixed",
+      bottom: 36,
       left: 0,
       right: 0,
       height: 22,
-      background: "#1a1a1a",
-      borderTop: "1px solid #333",
+      background: "#111",
+      borderTop: "1px solid #2a2a2a",
+      borderBottom: "1px solid #2a2a2a",
       display: "flex",
       alignItems: "center",
       overflow: "hidden",
-      zIndex: 100,
+      zIndex: 9998,
     }}>
       {/* Label */}
       <div style={{

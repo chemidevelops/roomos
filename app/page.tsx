@@ -398,7 +398,7 @@ function Desktop() {
   ));
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
   const [maxZ, setMaxZ] = useState(11);
-  const [wallpaper, setWallpaper] = useState<WallpaperKey>("gradient-dark");
+  const [wallpaper, setWallpaper] = useState<WallpaperKey>("retro-mac");
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
   const isMobileRef = useRef(isMobile);
   const desktopRef = useRef<HTMLDivElement>(null);
