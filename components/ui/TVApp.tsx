@@ -171,6 +171,7 @@ export default function TVApp() {
                 src={streamUrl}
                 autoPlay
                 controls
+                playsInline
                 onEnded={next}
                 style={{ width: "100%", height: "100%", objectFit: "contain" }}
               />
