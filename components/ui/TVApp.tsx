@@ -40,6 +40,7 @@ type YouTubePlayerInstance = {
   playVideo: () => void;
   mute: () => void;
   unMute: () => void;
+  loadVideoById: (videoId: string) => void;
   destroy: () => void;
 };
 
@@ -89,8 +90,14 @@ function YouTubeFallback({ video, onEnded }: { video: Video; onEnded: () => void
   const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<YouTubePlayerInstance | null>(null);
   const onEndedRef = useRef(onEnded);
+  const videoIdRef = useRef(video.id);
+  const readyRef = useRef(false);
 
   useEffect(() => { onEndedRef.current = onEnded; }, [onEnded]);
+  useEffect(() => {
+    videoIdRef.current = video.id;
+    if (readyRef.current) playerRef.current?.loadVideoById(video.id);
+  }, [video.id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -99,10 +106,11 @@ function YouTubeFallback({ video, onEnded }: { video: Video; onEnded: () => void
     loadYouTubeApi().then(YT => {
       if (cancelled || !containerRef.current) return;
       playerRef.current = new YT.Player(containerRef.current, {
-        videoId: video.id,
+        videoId: videoIdRef.current,
         playerVars: { autoplay: 1, controls: 1, playsinline: 1, rel: 0 },
         events: {
           onReady: event => {
+            readyRef.current = true;
             if (isMobile) {
               event.target.mute();
             }
@@ -117,10 +125,11 @@ function YouTubeFallback({ video, onEnded }: { video: Video; onEnded: () => void
 
     return () => {
       cancelled = true;
+      readyRef.current = false;
       playerRef.current?.destroy();
       playerRef.current = null;
     };
-  }, [video.id]);
+  }, []);
 
   return <div ref={containerRef} style={{ width: "100%", height: "100%" }} />;
 }
@@ -133,8 +142,6 @@ export default function TVApp() {
   const [queue, setQueue] = useState<Video[]>([]);
   const [current, setCurrent] = useState<Video | null>(null);
   const [loading, setLoading] = useState(true);
-  const [streamUrl, setStreamUrl] = useState<string | null>(null);
-  const [streamLoading, setStreamLoading] = useState(false);
   const [rssVideos, setRssVideos] = useState<Video[]>([]);
   const trackingRef = useRef<{ label: string; start: number } | null>(null);
   const nextRef = useRef<() => void>(() => {});
@@ -180,27 +187,12 @@ export default function TVApp() {
   // Guardar progreso cada 2 minutos mientras reproduce
   useEffect(() => {
     const id = setInterval(() => {
-      if (trackingRef.current && streamUrl) {
+      if (trackingRef.current && current) {
         logUsage(trackingRef.current.label, trackingRef.current.start);
         trackingRef.current = { label: trackingRef.current.label, start: Date.now() };
       }
     }, 2 * 60 * 1000);
     return () => clearInterval(id);
-  }, [streamUrl]);
-
-  // El stream va directo al proxy (que llama yt-dlp internamente)
-  useEffect(() => {
-    if (!current) return;
-    setStreamUrl(null);
-    setStreamLoading(true);
-    // HEAD para verificar que el stream está listo antes de ponerlo en el <video>
-    fetch(`/api/stream?v=${current.id}`, { method: "HEAD" })
-      .then(r => {
-        if (r.ok) setStreamUrl(`/api/stream?v=${current.id}`);
-        else setStreamUrl(null);
-      })
-      .catch(() => setStreamUrl(null))
-      .finally(() => setStreamLoading(false));
   }, [current]);
 
   // Siguiente video — usa refs para evitar stale closures
@@ -268,42 +260,8 @@ export default function TVApp() {
         <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
           {/* Video */}
           <div style={{ flex: 1, background: "#000", position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            {streamLoading && (
-              <div style={{ color: "#555", fontSize: 12, fontFamily: "monospace" }}>Cargando stream...</div>
-            )}
-            {streamUrl && (
-              <video
-                key={streamUrl}
-                src={streamUrl}
-                controls
-                playsInline
-                autoPlay
-                onEnded={advanceOnce}
-                onTimeUpdate={e => {
-                  const v = e.currentTarget;
-                  if (v.duration && v.currentTime >= v.duration - 0.5) advanceOnce();
-                }}
-                ref={el => {
-                  if (!el) return;
-                  el.muted = true;
-                  el.setAttribute("muted", "");
-                  const tryPlay = () => {
-                    el.play().then(() => {
-                      // Desmutear al primer toque
-                      const unmute = () => { el.muted = false; };
-                      document.addEventListener("click", unmute, { once: true });
-                      document.addEventListener("touchstart", unmute, { once: true });
-                    }).catch(() => {});
-                  };
-                  if (el.readyState >= 3) tryPlay();
-                  else el.addEventListener("canplay", tryPlay, { once: true });
-                }}
-                style={{ width: "100%", height: "100%", objectFit: "contain" }}
-              />
-            )}
-            {!streamLoading && !streamUrl && current && (
+            {current && (
               <YouTubeFallback
-                key={current.id}
                 video={current}
                 onEnded={advanceOnce}
               />
