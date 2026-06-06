@@ -76,6 +76,104 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
+type YouTubePlayerInstance = {
+  playVideo: () => void;
+  mute: () => void;
+  unMute: () => void;
+  loadVideoById: (videoId: string) => void;
+  destroy: () => void;
+};
+
+type YouTubeNamespace = {
+  Player: new (
+    element: HTMLDivElement,
+    options: {
+      videoId: string;
+      playerVars: Record<string, number>;
+      events: {
+        onReady: (event: { target: YouTubePlayerInstance }) => void;
+        onStateChange: (event: { data: number }) => void;
+      };
+    },
+  ) => YouTubePlayerInstance;
+  PlayerState: { ENDED: number };
+};
+
+declare global {
+  interface Window {
+    YT?: YouTubeNamespace;
+    onYouTubeIframeAPIReady?: () => void;
+  }
+}
+
+let youtubeApiPromise: Promise<YouTubeNamespace> | null = null;
+
+function loadYouTubeApi(): Promise<YouTubeNamespace> {
+  if (window.YT?.Player) return Promise.resolve(window.YT);
+  if (youtubeApiPromise) return youtubeApiPromise;
+
+  youtubeApiPromise = new Promise(resolve => {
+    window.onYouTubeIframeAPIReady = () => {
+      if (window.YT) resolve(window.YT);
+    };
+    if (!document.querySelector('script[src="https://www.youtube.com/iframe_api"]')) {
+      const script = document.createElement("script");
+      script.src = "https://www.youtube.com/iframe_api";
+      document.head.appendChild(script);
+    }
+  });
+
+  return youtubeApiPromise;
+}
+
+function YouTubeFallback({ video, onEnded }: { video: Video; onEnded: () => void }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const playerRef = useRef<YouTubePlayerInstance | null>(null);
+  const onEndedRef = useRef(onEnded);
+  const videoIdRef = useRef(video.id);
+  const readyRef = useRef(false);
+
+  useEffect(() => { onEndedRef.current = onEnded; }, [onEnded]);
+  useEffect(() => {
+    videoIdRef.current = video.id;
+    if (readyRef.current) playerRef.current?.loadVideoById(video.id);
+  }, [video.id]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+    loadYouTubeApi().then(YT => {
+      if (cancelled || !containerRef.current) return;
+      playerRef.current = new YT.Player(containerRef.current, {
+        videoId: videoIdRef.current,
+        playerVars: { autoplay: 1, controls: 1, playsinline: 1, rel: 0 },
+        events: {
+          onReady: event => {
+            readyRef.current = true;
+            if (isMobile) {
+              event.target.mute();
+            }
+            event.target.playVideo();
+          },
+          onStateChange: event => {
+            if (event.data === YT.PlayerState.ENDED) onEndedRef.current();
+          },
+        },
+      });
+    });
+
+    return () => {
+      cancelled = true;
+      readyRef.current = false;
+      playerRef.current?.destroy();
+      playerRef.current = null;
+    };
+  }, []);
+
+  return <div ref={containerRef} style={{ width: "100%", height: "100%" }} />;
+}
+
 
 export default function TVApp() {
   const [activeChannel, setActiveChannel] = useState(CHANNELS[0]);
@@ -84,15 +182,12 @@ export default function TVApp() {
   const [queue, setQueue] = useState<Video[]>([]);
   const [current, setCurrent] = useState<Video | null>(null);
   const [loading, setLoading] = useState(true);
-  const [streamUrl, setStreamUrl] = useState<string | null>(null);
-  const [streamLoading, setStreamLoading] = useState(false);
   const [rssVideos, setRssVideos] = useState<Video[]>([]);
   const trackingRef = useRef<{ label: string; start: number } | null>(null);
   const nextRef = useRef<() => void>(() => {});
   const videosRef = useRef<Video[]>([]);
   const queueRef = useRef<Video[]>([]);
   const nextCalledRef = useRef(false);
-  const failCountRef = useRef(0);
 
   function logUsage(label: string, start: number) {
     const seconds = Math.round((Date.now() - start) / 1000);
@@ -104,18 +199,19 @@ export default function TVApp() {
   // Cargar videos del canal activo
   useEffect(() => {
     setLoading(true);
-    setStreamUrl(null);
 
     if (activeChannel.type === "search") {
-      // Elegir queries aleatorias para no repetir siempre lo mismo
-      const qs = shuffle(activeChannel.queries ?? []).slice(0, 12);
+      const queries = shuffle(activeChannel.queries ?? []).slice(0, 12);
       Promise.all(
-        qs.map(q =>
-          fetch(`/api/ytsearch?q=${encodeURIComponent(q)}&n=3`)
+        queries.map(query =>
+          fetch(`/api/ytsearch?q=${encodeURIComponent(query)}&n=3`)
             .then(r => r.json())
             .then(d => (d.ids as string[]).map(id => ({
-              id, title: q.replace(" live", "").replace(" concert", ""),
-              channelName: "Live Music", published: "", thumb: `https://i.ytimg.com/vi/${id}/mqdefault.jpg`,
+              id,
+              title: query.replace(" live", "").replace(" concert", ""),
+              channelName: "Live Music",
+              published: "",
+              thumb: `https://i.ytimg.com/vi/${id}/mqdefault.jpg`,
             })))
             .catch(() => [] as Video[])
         )
@@ -127,25 +223,26 @@ export default function TVApp() {
         setCurrent(all[0] ?? null);
         setLoading(false);
       });
-    } else {
-      Promise.all(
-        activeChannel.sources.map(s =>
-          fetch(`/api/youtube?channelId=${s.id}`)
-            .then(r => r.json())
-            .then(d => d.videos as Video[])
-            .catch(() => [] as Video[])
-        )
-      ).then(results => {
-        const all = results.flat();
-        const sorted = [...all].sort((a, b) => new Date(b.published).getTime() - new Date(a.published).getTime());
-        setRssVideos(sorted);
-        const shuffled = shuffle(all);
-        setVideos(shuffled);
-        setQueue(shuffled);
-        setCurrent(shuffled[0] ?? null);
-        setLoading(false);
-      });
+      return;
     }
+
+    Promise.all(
+      activeChannel.sources.map(source =>
+        fetch(`/api/youtube?channelId=${source.id}`)
+          .then(r => r.json())
+          .then(d => d.videos as Video[])
+          .catch(() => [] as Video[])
+      )
+    ).then(results => {
+      const all = results.flat();
+      const sorted = [...all].sort((a, b) => new Date(b.published).getTime() - new Date(a.published).getTime());
+      const shuffled = shuffle(all);
+      setRssVideos(sorted);
+      setVideos(shuffled);
+      setQueue(shuffled);
+      setCurrent(shuffled[0] ?? null);
+      setLoading(false);
+    });
   }, [activeChannel]);
 
   // Log uso del video anterior al cambiar
@@ -157,42 +254,12 @@ export default function TVApp() {
   // Guardar progreso cada 2 minutos mientras reproduce
   useEffect(() => {
     const id = setInterval(() => {
-      if (trackingRef.current && streamUrl) {
+      if (trackingRef.current && current) {
         logUsage(trackingRef.current.label, trackingRef.current.start);
         trackingRef.current = { label: trackingRef.current.label, start: Date.now() };
       }
     }, 2 * 60 * 1000);
     return () => clearInterval(id);
-  }, [streamUrl]);
-
-  // El stream va directo al proxy (que llama yt-dlp internamente)
-  useEffect(() => {
-    if (!current) return;
-    setStreamUrl(null);
-    setStreamLoading(true);
-    // HEAD para verificar que el stream está listo antes de ponerlo en el <video>
-    const isSearch = activeChannel.type === "search";
-    fetch(`/api/stream?v=${current.id}`, { method: "HEAD" })
-      .then(r => {
-        if (r.ok) {
-          failCountRef.current = 0;
-          setStreamUrl(`/api/stream?v=${current.id}`);
-        } else {
-          setStreamUrl(null);
-          if (isSearch) {
-            failCountRef.current++;
-            if (failCountRef.current <= 8) setTimeout(() => nextRef.current(), 800);
-          }
-        }
-      })
-      .catch(() => {
-        setStreamUrl(null);
-        if (isSearch) {
-          failCountRef.current++;
-          if (failCountRef.current <= 8) setTimeout(() => nextRef.current(), 800);
-        }
-      })
-      .finally(() => setStreamLoading(false));
   }, [current]);
 
   // Siguiente video — usa refs para evitar stale closures
@@ -209,12 +276,17 @@ export default function TVApp() {
   useEffect(() => { videosRef.current = videos; }, [videos]);
   useEffect(() => { queueRef.current = queue; }, [queue]);
   useEffect(() => { nextRef.current = next; });
-  // Resetear guards al cambiar de video
+  // Resetear guard al cambiar de video
   useEffect(() => { nextCalledRef.current = false; }, [current]);
-  useEffect(() => { failCountRef.current = 0; }, [activeChannel]);
+
+  const advanceOnce = useCallback(() => {
+    if (nextCalledRef.current) return;
+    nextCalledRef.current = true;
+    nextRef.current();
+  }, []);
 
   const formatDate = (d: string) =>
-    new Date(d).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" });
+    d ? new Date(d).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" }) : "";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", fontFamily: "monospace", fontSize: 12, background: "#0a0a0a", color: "#fff" }}>
@@ -250,59 +322,27 @@ export default function TVApp() {
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "#555" }}>
           Loading...
         </div>
-      ) : mode === "tv" ? (
-        /* ── TV MODE ── */
-        <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+      ) : (
+        <div style={{ flex: 1, position: "relative", minHeight: 0 }}>
+          {/* TV stays mounted so playback continues in feed mode. */}
+          <div style={{
+            position: "absolute", inset: 0,
+            display: "flex", flexDirection: "column",
+            visibility: mode === "tv" ? "visible" : "hidden",
+            pointerEvents: mode === "tv" ? "auto" : "none",
+          }}>
           {/* Video */}
           <div style={{ flex: 1, background: "#000", position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            {streamLoading && (
-              <div style={{ color: "#555", fontSize: 12, fontFamily: "monospace" }}>Cargando stream...</div>
-            )}
-            {streamUrl && (
-              <video
-                key={streamUrl}
-                src={streamUrl}
-                controls
-                playsInline
-                autoPlay
-                onEnded={() => { if (!nextCalledRef.current) { nextCalledRef.current = true; nextRef.current(); } }}
-                onTimeUpdate={e => {
-                  const v = e.currentTarget;
-                  if (!nextCalledRef.current && v.duration && v.currentTime >= v.duration - 0.5) {
-                    nextCalledRef.current = true;
-                    nextRef.current();
-                  }
-                }}
-                ref={el => {
-                  if (!el) return;
-                  el.muted = true;
-                  el.setAttribute("muted", "");
-                  const tryPlay = () => {
-                    el.play().then(() => {
-                      // Desmutear al primer toque
-                      const unmute = () => { el.muted = false; };
-                      document.addEventListener("click", unmute, { once: true });
-                      document.addEventListener("touchstart", unmute, { once: true });
-                    }).catch(() => {});
-                  };
-                  if (el.readyState >= 3) tryPlay();
-                  else el.addEventListener("canplay", tryPlay, { once: true });
-                }}
-                style={{ width: "100%", height: "100%", objectFit: "contain" }}
+            {current && (
+              <YouTubeFallback
+                video={current}
+                onEnded={advanceOnce}
               />
-            )}
-            {!streamLoading && !streamUrl && current && (
-              <div style={{ color: "#555", fontSize: 11, fontFamily: "monospace", textAlign: "center", padding: 20 }}>
-                Vídeo no disponible.<br/>
-                <button onClick={() => nextRef.current()} style={{ marginTop: 8, background: "#333", color: "#fff", border: "none", padding: "4px 12px", cursor: "pointer", fontFamily: "monospace", fontSize: 10 }}>
-                  Siguiente →
-                </button>
-              </div>
             )}
           </div>
           {/* Info bar */}
           <div style={{ padding: "8px 12px", background: "#111", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
-            <div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 11, fontWeight: 700, lineHeight: 1.3, color: "#fff", flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                 {current?.title}
               </div>
@@ -313,13 +353,18 @@ export default function TVApp() {
             <button onClick={next} style={{
               background: "transparent", border: "1px solid #444",
               color: "#fff", padding: "4px 10px", cursor: "pointer",
-              fontFamily: "monospace", fontSize: 10, flexShrink: 0,
+              fontFamily: "monospace", fontSize: 10, flexShrink: 0, marginLeft: 12,
             }}>⏭ NEXT</button>
           </div>
         </div>
-      ) : (
-        /* ── RSS/FEED MODE ── */
-        <div style={{ flex: 1, overflowY: "auto" }}>
+
+          {/* ── RSS/FEED MODE ── */}
+          <div style={{
+            position: "absolute", inset: 0, overflowY: "auto",
+            background: "#0a0a0a",
+            visibility: mode === "rss" ? "visible" : "hidden",
+            pointerEvents: mode === "rss" ? "auto" : "none",
+          }}>
           {rssVideos.map((v, i) => (
             <div key={i} onClick={() => { setCurrent(v); setMode("tv"); }}
               style={{ display: "flex", gap: 10, padding: "8px 10px", borderBottom: "1px solid #1a1a1a", cursor: "pointer" }}
@@ -337,6 +382,7 @@ export default function TVApp() {
               </div>
             </div>
           ))}
+          </div>
         </div>
       )}
     </div>

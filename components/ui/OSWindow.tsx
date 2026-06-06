@@ -39,8 +39,6 @@ export default function OSWindow({
   const x = useMotionValue(0);
   const y = useMotionValue(0);
 
-  if (minimized) return null;
-
   const titleBarBg = focused ? "#1a1a1a" : "#8a8480";
 
   const maxStyle = maximized ? {
@@ -74,9 +72,17 @@ export default function OSWindow({
           borderRadius: 0,
           userSelect: "none",
           display: "flex",
+          opacity: minimized ? 0 : 1,
+          pointerEvents: minimized ? "none" : "auto",
           flexDirection: "column",
           transition: "box-shadow 0.1s, width 0.15s, height 0.15s",
           ...maxStyle,
+          ...(minimized ? {
+            position: "fixed" as const,
+            top: -100000,
+            left: -100000,
+            zIndex: -1,
+          } : {}),
         }}
       >
         {/* Title bar */}
