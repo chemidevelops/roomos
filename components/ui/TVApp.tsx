@@ -48,6 +48,7 @@ export default function TVApp() {
   const [streamLoading, setStreamLoading] = useState(false);
   const [rssVideos, setRssVideos] = useState<Video[]>([]);
   const trackingRef = useRef<{ label: string; start: number } | null>(null);
+  const nextRef = useRef<() => void>(() => {});
 
   function logUsage(label: string, start: number) {
     const seconds = Math.round((Date.now() - start) / 1000);
@@ -120,6 +121,9 @@ export default function TVApp() {
     });
   }
 
+  // Mantener nextRef actualizado para evitar stale closures en onEnded
+  useEffect(() => { nextRef.current = next; }, [videos, queue]);
+
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" });
 
@@ -172,7 +176,7 @@ export default function TVApp() {
                 autoPlay
                 controls
                 playsInline
-                onEnded={next}
+                onEnded={() => nextRef.current()}
                 ref={el => { if (el) el.play().catch(() => {}); }}
                 style={{ width: "100%", height: "100%", objectFit: "contain" }}
               />
