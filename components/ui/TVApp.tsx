@@ -70,15 +70,18 @@ export default function TVApp() {
     });
   }, [activeChannel]);
 
-  // Fetch stream URL cuando cambia el video
+  // Resolve stream → luego usar proxy
   useEffect(() => {
     if (!current) return;
     setStreamUrl(null);
     setStreamLoading(true);
-    fetch(`/api/stream?v=${current.id}`)
+    fetch(`/api/stream/resolve?v=${current.id}`)
       .then(r => r.json())
-      .then(d => { if (d.url) setStreamUrl(d.url); })
-      .catch(() => {})
+      .then(d => {
+        if (d.ok) setStreamUrl(`/api/stream?v=${current.id}&t=${Date.now()}`);
+        else setStreamUrl(null);
+      })
+      .catch(() => setStreamUrl(null))
       .finally(() => setStreamLoading(false));
   }, [current]);
 
