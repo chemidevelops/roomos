@@ -78,13 +78,22 @@ export default function TVApp() {
     });
   }, [activeChannel]);
 
-  // Log uso del video anterior
+  // Log uso del video anterior al cambiar
   useEffect(() => {
-    if (trackingRef.current) {
-      logUsage(trackingRef.current.label, trackingRef.current.start);
-    }
+    if (trackingRef.current) logUsage(trackingRef.current.label, trackingRef.current.start);
     if (current) trackingRef.current = { label: current.title, start: Date.now() };
   }, [current]);
+
+  // Guardar progreso cada 2 minutos mientras reproduce
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (trackingRef.current && streamUrl) {
+        logUsage(trackingRef.current.label, trackingRef.current.start);
+        trackingRef.current = { label: trackingRef.current.label, start: Date.now() };
+      }
+    }, 2 * 60 * 1000);
+    return () => clearInterval(id);
+  }, [streamUrl]);
 
   // El stream va directo al proxy (que llama yt-dlp internamente)
   useEffect(() => {
