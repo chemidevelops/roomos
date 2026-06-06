@@ -92,6 +92,7 @@ export default function TVApp() {
   const videosRef = useRef<Video[]>([]);
   const queueRef = useRef<Video[]>([]);
   const nextCalledRef = useRef(false);
+  const failCountRef = useRef(0);
 
   function logUsage(label: string, start: number) {
     const seconds = Math.round((Date.now() - start) / 1000);
@@ -172,10 +173,24 @@ export default function TVApp() {
     // HEAD para verificar que el stream está listo antes de ponerlo en el <video>
     fetch(`/api/stream?v=${current.id}`, { method: "HEAD" })
       .then(r => {
-        if (r.ok) setStreamUrl(`/api/stream?v=${current.id}`);
-        else setStreamUrl(null);
+        if (r.ok) {
+          failCountRef.current = 0;
+          setStreamUrl(`/api/stream?v=${current.id}`);
+        } else {
+          failCountRef.current++;
+          setStreamUrl(null);
+          if (failCountRef.current <= 8) {
+            setTimeout(() => nextRef.current(), 800);
+          }
+        }
       })
-      .catch(() => setStreamUrl(null))
+      .catch(() => {
+        failCountRef.current++;
+        setStreamUrl(null);
+        if (failCountRef.current <= 8) {
+          setTimeout(() => nextRef.current(), 800);
+        }
+      })
       .finally(() => setStreamLoading(false));
   }, [current]);
 
@@ -193,8 +208,9 @@ export default function TVApp() {
   useEffect(() => { videosRef.current = videos; }, [videos]);
   useEffect(() => { queueRef.current = queue; }, [queue]);
   useEffect(() => { nextRef.current = next; });
-  // Resetear guard al cambiar de video
+  // Resetear guards al cambiar de video
   useEffect(() => { nextCalledRef.current = false; }, [current]);
+  useEffect(() => { failCountRef.current = 0; }, [activeChannel]);
 
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" });
