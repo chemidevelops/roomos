@@ -618,7 +618,7 @@ function Desktop() {
             onMinimize={() => minimizeWindow(w.id)}
             minimized={w.minimized}
             zIndex={w.zIndex}
-
+            retroMode={theme === "retro-mac"}
           >
             <WindowContent id={w.id} onOpenWindow={openWindow} />
           </OSWindow>
