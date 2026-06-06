@@ -49,6 +49,8 @@ export default function TVApp() {
   const [rssVideos, setRssVideos] = useState<Video[]>([]);
   const trackingRef = useRef<{ label: string; start: number } | null>(null);
   const nextRef = useRef<() => void>(() => {});
+  const videosRef = useRef<Video[]>([]);
+  const queueRef = useRef<Video[]>([]);
 
   function logUsage(label: string, start: number) {
     const seconds = Math.round((Date.now() - start) / 1000);
@@ -111,18 +113,20 @@ export default function TVApp() {
       .finally(() => setStreamLoading(false));
   }, [current]);
 
-  // Siguiente video
+  // Siguiente video — usa refs para evitar stale closures
   function next() {
-    setQueue(q => {
-      const rest = q.slice(1);
-      const newQ = rest.length > 0 ? rest : shuffle(videos);
-      setCurrent(newQ[0] ?? null);
-      return newQ;
-    });
+    const q = queueRef.current;
+    const rest = q.slice(1);
+    const newQ = rest.length > 0 ? rest : shuffle(videosRef.current);
+    queueRef.current = newQ;
+    setQueue(newQ);
+    setCurrent(newQ[0] ?? null);
   }
 
-  // Mantener nextRef actualizado para evitar stale closures en onEnded
-  useEffect(() => { nextRef.current = next; }, [videos, queue]);
+  // Mantener refs actualizados
+  useEffect(() => { videosRef.current = videos; }, [videos]);
+  useEffect(() => { queueRef.current = queue; }, [queue]);
+  useEffect(() => { nextRef.current = next; });
 
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" });
