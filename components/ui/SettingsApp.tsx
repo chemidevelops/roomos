@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 
-export type WallpaperKey = "gradient-dark" | "win95" | "grid" | "mac7" | "amiga";
+export type WallpaperKey = "gradient-dark" | "win95" | "grid" | "mac7" | "amiga" | "retro-mac";
 
 interface Swatch {
   id: WallpaperKey;
@@ -36,6 +36,11 @@ const SWATCHES: Swatch[] = [
     label: "Amiga",
     preview: "linear-gradient(to bottom, #0055aa 50%, #ff8800 50%)",
   },
+  {
+    id: "retro-mac",
+    label: "Retro Mac",
+    preview: "#6b8fa8",
+  },
 ];
 
 export const WALLPAPER_STYLES: Record<WallpaperKey, string> = {
@@ -44,6 +49,7 @@ export const WALLPAPER_STYLES: Record<WallpaperKey, string> = {
   "grid": "#111",
   "mac7": "repeating-linear-gradient(45deg, #2a2a2a 0px, #2a2a2a 8px, #3a3a3a 8px, #3a3a3a 16px)",
   "amiga": "linear-gradient(to bottom, #0055aa 50%, #ff8800 50%)",
+  "retro-mac": "#6b8fa8",
 };
 
 export const STORAGE_KEY = "roomos-wallpaper";

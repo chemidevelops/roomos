@@ -21,6 +21,7 @@ import RadioApp from "@/components/ui/RadioApp";
 import TVApp from "@/components/ui/TVApp";
 import StickyLayer, { addStickyRef } from "@/components/ui/StickyLayer";
 import { WALLPAPER_STYLES, STORAGE_KEY, type WallpaperKey } from "@/components/ui/SettingsApp";
+import NewsTicker from "@/components/ui/NewsTicker";
 
 /* ─────────────────────────────────────────────────────────────
    Types
@@ -564,7 +565,7 @@ function Desktop() {
     <div
       ref={desktopRef}
       style={{
-        position: "fixed", inset: 0, overflow: "hidden", paddingBottom: "36px",
+        position: "fixed", inset: 0, overflow: "hidden", paddingBottom: "58px",
         ...bgStyle,
         ...gridOverlay,
       }}
@@ -586,6 +587,7 @@ function Desktop() {
                 onSelect={() => setSelectedIcon(di.id)}
                 onDoubleClick={() => handleIconActivate(di.id)}
                 onDragEnd={(x, y) => updateIconPosition(di.id, x, y)}
+                retroMode={wallpaper === "retro-mac"}
               />
             </div>
           );
@@ -618,6 +620,9 @@ function Desktop() {
 
       {/* Sticky notes layer */}
       <StickyLayer />
+
+      {/* News ticker */}
+      <NewsTicker />
 
       {/* Taskbar */}
       <OSTaskbar

@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { RetroIcon } from "./RetroIcons";
 
 export interface DesktopIconItemProps {
   id: string;
@@ -12,10 +13,11 @@ export interface DesktopIconItemProps {
   onSelect: () => void;
   onDoubleClick: () => void;
   onDragEnd: (x: number, y: number) => void;
+  retroMode?: boolean;
 }
 
 export default function DesktopIconItem({
-  icon, label, x, y, selected, onSelect, onDoubleClick, onDragEnd,
+  id, icon, label, x, y, selected, onSelect, onDoubleClick, onDragEnd, retroMode,
 }: DesktopIconItemProps) {
   return (
     <motion.div
@@ -24,43 +26,51 @@ export default function DesktopIconItem({
       dragElastic={0}
       animate={{ x, y }}
       transition={{ type: "spring", stiffness: 400, damping: 30 }}
-      onDragEnd={(_, info) => {
-        onDragEnd(x + info.offset.x, y + info.offset.y);
-      }}
+      onDragEnd={(_, info) => onDragEnd(x + info.offset.x, y + info.offset.y)}
       onPointerDown={(e) => { e.stopPropagation(); onSelect(); }}
       onDoubleClick={(e) => { e.stopPropagation(); onDoubleClick(); }}
       style={{
         position: "absolute",
-        top: 0,
-        left: 0,
+        top: 0, left: 0,
         width: "72px",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        gap: "5px",
+        gap: "4px",
         cursor: "grab",
         userSelect: "none",
         padding: "6px 4px",
         touchAction: "none",
       }}
     >
-      <div style={{
-        fontSize: "40px",
-        lineHeight: 1,
-        filter: selected
-          ? "drop-shadow(0 0 8px rgba(245,200,0,0.8))"
-          : "drop-shadow(0 2px 4px rgba(0,0,0,0.35))",
-      }}>
-        {icon}
-      </div>
+      {retroMode ? (
+        <div style={{
+          width: 40, height: 40,
+          filter: selected ? "drop-shadow(0 0 4px rgba(0,0,0,0.8))" : "drop-shadow(0 2px 3px rgba(0,0,0,0.3))",
+          opacity: selected ? 0.75 : 1,
+        }}>
+          <RetroIcon id={id} size={40} />
+        </div>
+      ) : (
+        <div style={{
+          fontSize: "40px",
+          lineHeight: 1,
+          filter: selected ? "drop-shadow(0 0 8px rgba(245,200,0,0.8))" : "drop-shadow(0 2px 4px rgba(0,0,0,0.35))",
+        }}>
+          {icon}
+        </div>
+      )}
+
       <span style={{
-        fontFamily: "var(--font-space-grotesk), sans-serif",
-        fontSize: "11px",
-        fontWeight: 600,
+        fontFamily: retroMode ? "Chicago, 'Helvetica Neue', Arial, sans-serif" : "var(--font-space-grotesk), sans-serif",
+        fontSize: retroMode ? "10px" : "11px",
+        fontWeight: retroMode ? 400 : 600,
         color: "#ffffff",
-        background: selected ? "rgba(245,200,0,0.85)" : "rgba(0,0,0,0.45)",
+        background: selected
+          ? (retroMode ? "#0000aa" : "rgba(245,200,0,0.85)")
+          : (retroMode ? "rgba(0,0,0,0.55)" : "rgba(0,0,0,0.45)"),
         padding: "1px 5px",
-        borderRadius: "2px",
+        borderRadius: retroMode ? 0 : "2px",
         textAlign: "center",
         lineHeight: 1.4,
         maxWidth: "70px",
