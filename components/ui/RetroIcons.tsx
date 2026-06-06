@@ -1,28 +1,7 @@
 // Mac OS 9 style icons from BlissThatMiss/MoNine
 const BASE = "https://raw.githubusercontent.com/BlissThatMiss/MoNine/master/apps/32";
 
-const gear = `<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <radialGradient id="g" cx="40%" cy="35%">
-      <stop offset="0%" stop-color="#d0d0d0"/>
-      <stop offset="100%" stop-color="#888"/>
-    </radialGradient>
-  </defs>
-  <!-- Gear shape using polygon -->
-  <circle cx="16" cy="16" r="13" fill="url(#g)"/>
-  <!-- Teeth as small rects rotated via transform -->
-  ${[0,45,90,135,180,225,270,315].map(a => {
-    const r = a * Math.PI / 180;
-    const cx = 16 + Math.cos(r) * 11;
-    const cy = 16 + Math.sin(r) * 11;
-    return `<rect x="${(cx-2.5).toFixed(1)}" y="${(cy-2.5).toFixed(1)}" width="5" height="5" fill="#888" transform="rotate(${a} ${cx.toFixed(1)} ${cy.toFixed(1)})"/>`;
-  }).join('')}
-  <!-- Cover teeth edges with circle -->
-  <circle cx="16" cy="16" r="10" fill="url(#g)"/>
-  <!-- Center hole -->
-  <circle cx="16" cy="16" r="4.5" fill="#444"/>
-  <circle cx="16" cy="16" r="3.5" fill="#222"/>
-</svg>`;
+const gear = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#e0e0e0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`;
 
 const cards = `<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
   <!-- Card back -->
@@ -62,7 +41,7 @@ const SOLITAIRE_SVG = `data:image/svg+xml,${encodeURIComponent(cards)}`;
 export const RETRO_ICON_URLS: Record<string, string> = {
   calendar:   `${BASE}/gnome-calendar.png`,
   notes:      `${BASE}/xfce4-notes-plugin.png`,
-  settings:   `https://raw.githubusercontent.com/BlissThatMiss/MoNine/master/categories/32/preferences-system.png`,
+  settings:   SETTINGS_SVG,
   solitaire:  SOLITAIRE_SVG,
   terminal:   `${BASE}/org.xfce.terminal.png`,
   calculator: `${BASE}/accessories-calculator.png`,
