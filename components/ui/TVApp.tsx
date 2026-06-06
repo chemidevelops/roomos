@@ -16,7 +16,13 @@ const LIVE_MUSIC_ARTISTS = [
   "Stone Roses live", "The Strokes live", "Paolo Nutini live",
   "Peter Doherty live", "Shed Seven live", "Wunderhorse live",
   "Maximo Park live", "The Murder Capital live", "Sports Team live",
-  "Sundara Karma live", "Jake Bugg concert", "Richard Ashcroft concert",
+  "Sundara Karma live", "Viva Brother live", "Palma Violets live",
+  "The Reytons live", "The Royston Club live", "Andrew Cushin live",
+  "The Last Shadow Puppets live", "The Sherlocks live", "Feet band live",
+  "The Snuts live", "The K's band live", "The Amazons live",
+  "Been Stellar live", "Flyte band live", "Gurriers live",
+  "The Luka State live", "Mando Diao live", "The Seahorses live",
+  "Sheafs live", "Sugarmen live", "Esmeralda Road live",
 ];
 
 const CHANNELS = [
