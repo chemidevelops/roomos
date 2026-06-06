@@ -31,7 +31,7 @@ function strip(html: string): string[] {
     .replace(/https?:\/\/\S+/g, "")
     .replace(/[;[\]]/g, " ")
     // Decodificar entidades HTML comunes
-    .replace(/&nbsp;/g, " ")
+    .replace(/&nbsp;?/g, " ")
     .replace(/&amp;/g, "&")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
@@ -154,7 +154,8 @@ export default function RSSApp() {
 
   // ── Article view ───────────────────────────────────────────────────────────
   const ArticleContent = () => (
-    <div style={{ flex: 1, padding: 16, ...scrollbar, height: "100%" }}>
+    <div style={{ flex: 1, ...scrollbar, height: "100%", display: "flex", justifyContent: "center" }}>
+    <div style={{ width: "100%", maxWidth: 680, padding: "16px 24px" }}>
       {isMobile && selected && (
         <button onClick={() => setMobilePane("list")} style={{
           fontSize: 11, background: "none", border: "1px solid #ccc", padding: "2px 8px",
@@ -184,6 +185,7 @@ export default function RSSApp() {
       ) : (
         <div style={{ color: "#bbb", paddingTop: 40, textAlign: "center", fontSize: 12, fontFamily: "monospace" }}>Selecciona un artículo</div>
       )}
+    </div>
     </div>
   );
 
