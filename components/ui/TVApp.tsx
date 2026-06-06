@@ -173,6 +173,7 @@ export default function TVApp() {
                 controls
                 playsInline
                 onEnded={next}
+                ref={el => { if (el) el.play().catch(() => {}); }}
                 style={{ width: "100%", height: "100%", objectFit: "contain" }}
               />
             )}
