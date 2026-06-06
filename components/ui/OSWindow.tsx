@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { motion, AnimatePresence, useDragControls } from "framer-motion";
+import { motion, AnimatePresence, useDragControls, useMotionValue } from "framer-motion";
 
 export interface OSWindowProps {
   id: string;
@@ -36,6 +36,8 @@ export default function OSWindow({
   const dragControls = useDragControls();
   const containerRef = useRef<HTMLDivElement>(null);
   const [maximized, setMaximized] = useState(false);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
 
   if (minimized) return null;
 
@@ -65,12 +67,7 @@ export default function OSWindow({
         dragListener={false}
         dragMomentum={false}
         dragElastic={0}
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.92 }}
-        transition={{ duration: 0.12 }}
-        onPointerDown={onFocus}
-        style={{
+        style={{ x, y,
           border: "2px solid #1a1a1a",
           boxShadow: focused ? "6px 6px 0px #1a1a1a" : "4px 4px 0px #1a1a1a",
           background: "var(--room-paper, #faf7f2)",
@@ -85,7 +82,7 @@ export default function OSWindow({
         {/* Title bar */}
         <div
           onPointerDown={(e) => { if (!maximized) dragControls.start(e); }}
-          onDoubleClick={() => setMaximized(m => !m)}
+          onDoubleClick={() => { if (!maximized) { x.set(0); y.set(0); } setMaximized(m => !m); }}
           style={{
             height: "32px",
             minHeight: "32px",
@@ -121,7 +118,7 @@ export default function OSWindow({
             <WindowButton
               label={maximized ? "❐" : "□"}
               hoverBg="#1d4ed8" hoverColor="#ffffff"
-              onClick={(e) => { e.stopPropagation(); setMaximized(m => !m); }}
+              onClick={(e) => { e.stopPropagation(); if (!maximized) { x.set(0); y.set(0); } setMaximized(m => !m); }}
             />
             <WindowButton label="×" hoverBg="#dc2626" hoverColor="#ffffff"
               onClick={(e) => { e.stopPropagation(); onClose(); }} />

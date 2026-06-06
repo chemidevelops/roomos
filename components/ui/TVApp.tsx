@@ -178,10 +178,20 @@ export default function TVApp() {
                 key={streamUrl}
                 src={streamUrl}
                 autoPlay
+                muted
                 controls
                 playsInline
                 onEnded={() => nextRef.current()}
-                ref={el => { if (el) el.play().catch(() => {}); }}
+                ref={el => {
+                  if (!el) return;
+                  el.muted = true;
+                  el.play().then(() => {
+                    // Desmutear al primer toque/click del usuario
+                    const unmute = () => { el.muted = false; el.removeEventListener("click", unmute); el.removeEventListener("touchstart", unmute); document.removeEventListener("click", unmute); };
+                    el.addEventListener("click", unmute, { once: true });
+                    document.addEventListener("click", unmute, { once: true });
+                  }).catch(() => {});
+                }}
                 style={{ width: "100%", height: "100%", objectFit: "contain" }}
               />
             )}
@@ -200,7 +210,7 @@ export default function TVApp() {
           {/* Info bar */}
           <div style={{ padding: "8px 12px", background: "#111", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, lineHeight: 1.3, color: "#fff", maxWidth: "80%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <div style={{ fontSize: 11, fontWeight: 700, lineHeight: 1.3, color: "#fff", flex: 1 }}>
                 {current?.title}
               </div>
               <div style={{ fontSize: 9, color: "#666", marginTop: 2 }}>
