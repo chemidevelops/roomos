@@ -51,6 +51,7 @@ export default function TVApp() {
   const nextRef = useRef<() => void>(() => {});
   const videosRef = useRef<Video[]>([]);
   const queueRef = useRef<Video[]>([]);
+  const nextCalledRef = useRef(false);
 
   function logUsage(label: string, start: number) {
     const seconds = Math.round((Date.now() - start) / 1000);
@@ -127,6 +128,8 @@ export default function TVApp() {
   useEffect(() => { videosRef.current = videos; }, [videos]);
   useEffect(() => { queueRef.current = queue; }, [queue]);
   useEffect(() => { nextRef.current = next; });
+  // Resetear guard al cambiar de video
+  useEffect(() => { nextCalledRef.current = false; }, [current]);
 
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" });
@@ -179,10 +182,15 @@ export default function TVApp() {
                 src={streamUrl}
                 controls
                 playsInline
-                onEnded={() => nextRef.current()}
+                autoPlay
+                defaultMuted
+                onEnded={() => { if (!nextCalledRef.current) { nextCalledRef.current = true; nextRef.current(); } }}
                 onTimeUpdate={e => {
                   const v = e.currentTarget;
-                  if (v.duration && v.currentTime >= v.duration - 0.5) nextRef.current();
+                  if (!nextCalledRef.current && v.duration && v.currentTime >= v.duration - 0.5) {
+                    nextCalledRef.current = true;
+                    nextRef.current();
+                  }
                 }}
                 ref={el => {
                   if (!el) return;
