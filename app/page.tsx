@@ -49,7 +49,6 @@ const ICON_W = 80;
    Icon definitions
 ───────────────────────────────────────────────────────────── */
 const APP_ICONS = [
-  { id: "home",       icon: "🏠", label: "Home" },
   { id: "calendar",   icon: "📅", label: "Agenda" },
   { id: "notes",      icon: "📓", label: "Notes" },
   { id: "settings",   icon: "⚙️",  label: "Settings" },
@@ -71,18 +70,6 @@ function makeWindows(vw: number): WindowState[] {
   const W = mobile ? Math.min(vw - 16, 420) : undefined;
 
   return [
-    {
-      id: "home",
-      title: "Home",
-      icon: "🏠",
-      open: false,
-      minimized: false,
-      focused: false,
-      zIndex: 9,
-      position: mobile ? { x: 8, y: 60 } : { x: 220, y: 80 },
-      width: W ?? 440,
-      height: "auto",
-    },
     {
       id: "notes",
       title: "Notes",
@@ -353,7 +340,6 @@ function HomeWindowContent({ onOpenWindow }: { onOpenWindow: (id: string) => voi
 function WindowContent({ id, onOpenWindow }: { id: string; onOpenWindow: (id: string) => void }) {
   switch (id) {
 
-    case "home":     return <HomeWindowContent onOpenWindow={onOpenWindow} />;
     case "notes":    return <NotesApp />;
     case "calendar": return <ScheduleApp />;
     case "settings":  return <SettingsApp />;
