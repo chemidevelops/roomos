@@ -173,9 +173,9 @@ export default function TVApp() {
     fetch(`/api/stream?v=${current.id}`, { method: "HEAD" })
       .then(r => {
         if (r.ok) setStreamUrl(`/api/stream?v=${current.id}`);
-        else setStreamUrl(null);
+        else { setStreamUrl(null); setTimeout(() => nextRef.current(), 500); }
       })
-      .catch(() => setStreamUrl(null))
+      .catch(() => { setStreamUrl(null); setTimeout(() => nextRef.current(), 500); })
       .finally(() => setStreamLoading(false));
   }, [current]);
 
@@ -274,16 +274,8 @@ export default function TVApp() {
                 style={{ width: "100%", height: "100%", objectFit: "contain" }}
               />
             )}
-            {!streamLoading && !streamUrl && current && (
-              <iframe
-                key={current.id}
-                src={`https://www.youtube-nocookie.com/embed/${current.id}?autoplay=1&rel=0`}
-                title={current.title}
-                allow="autoplay; encrypted-media; picture-in-picture"
-                allowFullScreen
-                referrerPolicy="strict-origin-when-cross-origin"
-                style={{ width: "100%", height: "100%", border: 0 }}
-              />
+            {!streamLoading && !streamUrl && (
+              <div style={{ color: "#333", fontSize: 11, fontFamily: "monospace" }}>Cargando...</div>
             )}
           </div>
           {/* Info bar */}
