@@ -16,6 +16,7 @@ import StatsApp from "@/components/ui/StatsApp";
 import AlarmApp from "@/components/ui/AlarmApp";
 import RSSApp from "@/components/ui/RSSApp";
 import RadioApp from "@/components/ui/RadioApp";
+import TVApp from "@/components/ui/TVApp";
 import StickyLayer, { addStickyRef } from "@/components/ui/StickyLayer";
 import { WALLPAPER_STYLES, STORAGE_KEY, type WallpaperKey } from "@/components/ui/SettingsApp";
 
@@ -60,6 +61,7 @@ const APP_ICONS = [
   { id: "alarms",     icon: "⏰", label: "Alarms" },
   { id: "rss",        icon: "📡", label: "RSS" },
   { id: "radio",      icon: "📻", label: "Radio" },
+  { id: "tv",         icon: "📺", label: "TV" },
 ];
 
 /* ─────────────────────────────────────────────────────────────
@@ -227,6 +229,18 @@ function makeWindows(vw: number): WindowState[] {
       height: 480,
     },
     {
+      id: "tv",
+      title: "TV",
+      icon: "📺",
+      open: false,
+      minimized: false,
+      focused: false,
+      zIndex: 1,
+      position: mobile ? { x: 8, y: 60 } : { x: 160, y: 60 },
+      width: W ?? 640,
+      height: 420,
+    },
+    {
       id: "radio",
       title: "Radio",
       icon: "📻",
@@ -389,6 +403,7 @@ function WindowContent({ id, onOpenWindow }: { id: string; onOpenWindow: (id: st
     case "alarms":      return <AlarmApp />;
     case "rss":         return <RSSApp />;
     case "radio":       return <RadioApp />;
+    case "tv":          return <TVApp />;
     default:            return <div style={{ padding: "24px", textAlign: "center", color: "#6b6560" }}>{id}</div>;
   }
 }
