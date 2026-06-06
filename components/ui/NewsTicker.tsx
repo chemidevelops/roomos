@@ -15,7 +15,7 @@ export default function NewsTicker() {
   if (items.length === 0) return null;
 
   const text = items.join("   ·   ") + "   ·   ";
-  const duration = Math.max(60, items.length * 7);
+  const duration = Math.max(45, items.length * 5);
 
   return (
     <div style={{
