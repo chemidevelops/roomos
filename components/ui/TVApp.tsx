@@ -89,7 +89,6 @@ function YouTubeFallback({ video, onEnded }: { video: Video; onEnded: () => void
   const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<YouTubePlayerInstance | null>(null);
   const onEndedRef = useRef(onEnded);
-  const [muted, setMuted] = useState(false);
 
   useEffect(() => { onEndedRef.current = onEnded; }, [onEnded]);
 
@@ -106,7 +105,6 @@ function YouTubeFallback({ video, onEnded }: { video: Video; onEnded: () => void
           onReady: event => {
             if (isMobile) {
               event.target.mute();
-              setMuted(true);
             }
             event.target.playVideo();
           },
@@ -124,27 +122,7 @@ function YouTubeFallback({ video, onEnded }: { video: Video; onEnded: () => void
     };
   }, [video.id]);
 
-  function enableSound() {
-    playerRef.current?.unMute();
-    playerRef.current?.playVideo();
-    setMuted(false);
-  }
-
-  return (
-    <>
-      <div ref={containerRef} style={{ width: "100%", height: "100%" }} />
-      {muted && (
-        <button onClick={enableSound} style={{
-          position: "absolute", right: 12, bottom: 12, zIndex: 2,
-          background: "#fff", color: "#000", border: "none",
-          padding: "8px 12px", cursor: "pointer",
-          fontFamily: "monospace", fontSize: 11, fontWeight: 700,
-        }}>
-          ACTIVAR SONIDO
-        </button>
-      )}
-    </>
-  );
+  return <div ref={containerRef} style={{ width: "100%", height: "100%" }} />;
 }
 
 
