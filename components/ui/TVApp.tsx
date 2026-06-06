@@ -70,15 +70,15 @@ export default function TVApp() {
     });
   }, [activeChannel]);
 
-  // Resolve stream → luego usar proxy
+  // El stream va directo al proxy (que llama yt-dlp internamente)
   useEffect(() => {
     if (!current) return;
     setStreamUrl(null);
     setStreamLoading(true);
-    fetch(`/api/stream/resolve?v=${current.id}`)
-      .then(r => r.json())
-      .then(d => {
-        if (d.ok) setStreamUrl(`/api/stream?v=${current.id}&t=${Date.now()}`);
+    // HEAD para verificar que el stream está listo antes de ponerlo en el <video>
+    fetch(`/api/stream?v=${current.id}`, { method: "HEAD" })
+      .then(r => {
+        if (r.ok) setStreamUrl(`/api/stream?v=${current.id}`);
         else setStreamUrl(null);
       })
       .catch(() => setStreamUrl(null))
