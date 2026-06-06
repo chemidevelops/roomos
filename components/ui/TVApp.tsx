@@ -36,6 +36,117 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
+type YouTubePlayerInstance = {
+  playVideo: () => void;
+  mute: () => void;
+  unMute: () => void;
+  destroy: () => void;
+};
+
+type YouTubeNamespace = {
+  Player: new (
+    element: HTMLDivElement,
+    options: {
+      videoId: string;
+      playerVars: Record<string, number>;
+      events: {
+        onReady: (event: { target: YouTubePlayerInstance }) => void;
+        onStateChange: (event: { data: number }) => void;
+      };
+    },
+  ) => YouTubePlayerInstance;
+  PlayerState: { ENDED: number };
+};
+
+declare global {
+  interface Window {
+    YT?: YouTubeNamespace;
+    onYouTubeIframeAPIReady?: () => void;
+  }
+}
+
+let youtubeApiPromise: Promise<YouTubeNamespace> | null = null;
+
+function loadYouTubeApi(): Promise<YouTubeNamespace> {
+  if (window.YT?.Player) return Promise.resolve(window.YT);
+  if (youtubeApiPromise) return youtubeApiPromise;
+
+  youtubeApiPromise = new Promise(resolve => {
+    window.onYouTubeIframeAPIReady = () => {
+      if (window.YT) resolve(window.YT);
+    };
+    if (!document.querySelector('script[src="https://www.youtube.com/iframe_api"]')) {
+      const script = document.createElement("script");
+      script.src = "https://www.youtube.com/iframe_api";
+      document.head.appendChild(script);
+    }
+  });
+
+  return youtubeApiPromise;
+}
+
+function YouTubeFallback({ video, onEnded }: { video: Video; onEnded: () => void }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const playerRef = useRef<YouTubePlayerInstance | null>(null);
+  const onEndedRef = useRef(onEnded);
+  const [muted, setMuted] = useState(false);
+
+  useEffect(() => { onEndedRef.current = onEnded; }, [onEnded]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+    loadYouTubeApi().then(YT => {
+      if (cancelled || !containerRef.current) return;
+      playerRef.current = new YT.Player(containerRef.current, {
+        videoId: video.id,
+        playerVars: { autoplay: 1, controls: 1, playsinline: 1, rel: 0 },
+        events: {
+          onReady: event => {
+            if (isMobile) {
+              event.target.mute();
+              setMuted(true);
+            }
+            event.target.playVideo();
+          },
+          onStateChange: event => {
+            if (event.data === YT.PlayerState.ENDED) onEndedRef.current();
+          },
+        },
+      });
+    });
+
+    return () => {
+      cancelled = true;
+      playerRef.current?.destroy();
+      playerRef.current = null;
+    };
+  }, [video.id]);
+
+  function enableSound() {
+    playerRef.current?.unMute();
+    playerRef.current?.playVideo();
+    setMuted(false);
+  }
+
+  return (
+    <>
+      <div ref={containerRef} style={{ width: "100%", height: "100%" }} />
+      {muted && (
+        <button onClick={enableSound} style={{
+          position: "absolute", right: 12, bottom: 12, zIndex: 2,
+          background: "#fff", color: "#000", border: "none",
+          padding: "8px 12px", cursor: "pointer",
+          fontFamily: "monospace", fontSize: 11, fontWeight: 700,
+        }}>
+          ACTIVAR SONIDO
+        </button>
+      )}
+    </>
+  );
+}
+
 
 export default function TVApp() {
   const [activeChannel, setActiveChannel] = useState(CHANNELS[0]);
@@ -131,6 +242,12 @@ export default function TVApp() {
   // Resetear guard al cambiar de video
   useEffect(() => { nextCalledRef.current = false; }, [current]);
 
+  const advanceOnce = useCallback(() => {
+    if (nextCalledRef.current) return;
+    nextCalledRef.current = true;
+    nextRef.current();
+  }, []);
+
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" });
 
@@ -183,13 +300,10 @@ export default function TVApp() {
                 controls
                 playsInline
                 autoPlay
-                onEnded={() => { if (!nextCalledRef.current) { nextCalledRef.current = true; nextRef.current(); } }}
+                onEnded={advanceOnce}
                 onTimeUpdate={e => {
                   const v = e.currentTarget;
-                  if (!nextCalledRef.current && v.duration && v.currentTime >= v.duration - 0.5) {
-                    nextCalledRef.current = true;
-                    nextRef.current();
-                  }
+                  if (v.duration && v.currentTime >= v.duration - 0.5) advanceOnce();
                 }}
                 ref={el => {
                   if (!el) return;
@@ -210,14 +324,10 @@ export default function TVApp() {
               />
             )}
             {!streamLoading && !streamUrl && current && (
-              <iframe
+              <YouTubeFallback
                 key={current.id}
-                src={`https://www.youtube-nocookie.com/embed/${current.id}?autoplay=1&rel=0`}
-                title={current.title}
-                allow="autoplay; encrypted-media; picture-in-picture"
-                allowFullScreen
-                referrerPolicy="strict-origin-when-cross-origin"
-                style={{ width: "100%", height: "100%", border: 0 }}
+                video={current}
+                onEnded={advanceOnce}
               />
             )}
           </div>
