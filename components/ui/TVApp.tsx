@@ -171,24 +171,25 @@ export default function TVApp() {
     setStreamUrl(null);
     setStreamLoading(true);
     // HEAD para verificar que el stream está listo antes de ponerlo en el <video>
+    const isSearch = activeChannel.type === "search";
     fetch(`/api/stream?v=${current.id}`, { method: "HEAD" })
       .then(r => {
         if (r.ok) {
           failCountRef.current = 0;
           setStreamUrl(`/api/stream?v=${current.id}`);
         } else {
-          failCountRef.current++;
           setStreamUrl(null);
-          if (failCountRef.current <= 8) {
-            setTimeout(() => nextRef.current(), 800);
+          if (isSearch) {
+            failCountRef.current++;
+            if (failCountRef.current <= 8) setTimeout(() => nextRef.current(), 800);
           }
         }
       })
       .catch(() => {
-        failCountRef.current++;
         setStreamUrl(null);
-        if (failCountRef.current <= 8) {
-          setTimeout(() => nextRef.current(), 800);
+        if (isSearch) {
+          failCountRef.current++;
+          if (failCountRef.current <= 8) setTimeout(() => nextRef.current(), 800);
         }
       })
       .finally(() => setStreamLoading(false));
