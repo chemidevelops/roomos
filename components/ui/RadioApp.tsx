@@ -84,15 +84,15 @@ export default function RadioApp() {
       return;
     }
     // nueva emisora
-    // Log tiempo de la emisora anterior
-    if (trackingRef.current) {
-      logUsage(trackingRef.current.station, trackingRef.current.start);
-    }
+    if (trackingRef.current) logUsage(trackingRef.current.station, trackingRef.current.start);
     setLoading(true);
     if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ""; }
     const audio = new Audio(station.stream);
     audio.volume = vol;
-    audio.play().then(() => { setLoading(false); setPlaying(true); }).catch(() => setLoading(false));
+    audio.addEventListener("playing", () => { setLoading(false); setPlaying(true); });
+    audio.addEventListener("pause", () => setPlaying(false));
+    audio.addEventListener("waiting", () => setLoading(true));
+    audio.play().catch(() => setLoading(false));
     audioRef.current = audio;
     trackingRef.current = { station: station.name, start: Date.now() };
     setActive(stationId);

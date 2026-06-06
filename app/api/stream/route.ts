@@ -11,7 +11,7 @@ async function resolve(videoId: string): Promise<string> {
   if (cached && Date.now() - cached.ts < TTL) return cached.url;
 
   const { stdout } = await execAsync(
-    `yt-dlp --cookies /root/yt-cookies.txt -f 'best[height<=720][ext=mp4]/best[height<=720]/best' --get-url 'https://www.youtube.com/watch?v=${videoId}'`,
+    `PATH=/root/.deno/bin:$PATH yt-dlp --cookies /root/yt-cookies.txt --js-runtimes deno -f 'best[height<=720][ext=mp4]/best[height<=720]/best' --get-url 'https://www.youtube.com/watch?v=${videoId}'`,
     { timeout: 25000 }
   );
   const url = stdout.trim().split("\n")[0];
@@ -50,13 +50,9 @@ export async function GET(req: NextRequest) {
   let upstream: Response;
   try {
     upstream = await fetch(streamUrl, {
-      headers: {
-        ...(range ? { Range: range } : {}),
-        "User-Agent": "Mozilla/5.0",
-      },
+      headers: { ...(range ? { Range: range } : {}), "User-Agent": "Mozilla/5.0" },
     });
-  } catch (e: any) {
-    // URL expirada — invalidar caché y reintentar
+  } catch {
     cache.delete(videoId);
     try {
       streamUrl = await resolve(videoId);

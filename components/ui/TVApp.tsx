@@ -2,10 +2,34 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 
+const LIVE_MUSIC_ARTISTS = [
+  "Oasis live concert", "Liam Gallagher live", "Noel Gallagher live",
+  "Arctic Monkeys live concert", "Suede live concert", "Pulp live concert",
+  "Stereophonics live", "Shame band live", "Fontaines DC live",
+  "Ocean Colour Scene live", "Blur live concert", "The Smiths live",
+  "Joy Division live", "Richard Ashcroft live", "Kaiser Chiefs live",
+  "The Lathums live", "Kula Shaker live", "The Coral live",
+  "Alex Turner live", "Babyshambles live", "The Libertines live",
+  "Black Midi live", "Blossoms live", "Do Nothing band live",
+  "Doves live concert", "Jake Bugg live", "Kasabian live",
+  "The Kooks live", "Gerry Cinnamon live", "Miles Kane live",
+  "Stone Roses live", "The Strokes live", "Paolo Nutini live",
+  "Peter Doherty live", "Shed Seven live", "Wunderhorse live",
+  "Maximo Park live", "The Murder Capital live", "Sports Team live",
+  "Sundara Karma live", "Viva Brother live", "Palma Violets live",
+  "The Reytons live", "The Royston Club live", "Andrew Cushin live",
+  "The Last Shadow Puppets live", "The Sherlocks live", "Feet band live",
+  "The Snuts live", "The K's band live", "The Amazons live",
+  "Been Stellar live", "Flyte band live", "Gurriers live",
+  "The Luka State live", "Mando Diao live", "The Seahorses live",
+  "Sheafs live", "Sugarmen live", "Esmeralda Road live",
+];
+
 const CHANNELS = [
   {
     id: "games",
     label: "GAMES",
+    type: "rss" as const,
     sources: [
       { id: "UC2vUKoTGIwNYq4LO0YWKPIg", name: "HappyConsoleGamer" },
       { id: "UCdB41UXrNAU_J7A7OnU4KSQ", name: "Japan Gemu" },
@@ -14,6 +38,22 @@ const CHANNELS = [
       { id: "UCiqwLswhzwJZeWwfocewNbg", name: "hazylevels" },
       { id: "UC0fDG3byEcMtbOqPMymDNbw", name: "/noclip" },
     ],
+  },
+  {
+    id: "japan",
+    label: "JAPAN",
+    type: "rss" as const,
+    sources: [
+      { id: "UCAv5d8knSA-hRtD27lD_E_w", name: "Abao Ambience" },
+      { id: "UCoXm66ArnAYGC0SCItOb2Tg", name: "4K JAPAN" },
+    ],
+  },
+  {
+    id: "music",
+    label: "LIVE MUSIC",
+    type: "search" as const,
+    queries: LIVE_MUSIC_ARTISTS,
+    sources: [],
   },
 ];
 
@@ -156,12 +196,39 @@ export default function TVApp() {
       body: JSON.stringify({ type: "tv", label, seconds }) }).catch(() => {});
   }
 
-  // Cargar videos de todos los canales
+  // Cargar videos del canal activo
   useEffect(() => {
     setLoading(true);
+
+    if (activeChannel.type === "search") {
+      const queries = shuffle(activeChannel.queries ?? []).slice(0, 12);
+      Promise.all(
+        queries.map(query =>
+          fetch(`/api/ytsearch?q=${encodeURIComponent(query)}&n=3`)
+            .then(r => r.json())
+            .then(d => (d.ids as string[]).map(id => ({
+              id,
+              title: query.replace(" live", "").replace(" concert", ""),
+              channelName: "Live Music",
+              published: "",
+              thumb: `https://i.ytimg.com/vi/${id}/mqdefault.jpg`,
+            })))
+            .catch(() => [] as Video[])
+        )
+      ).then(results => {
+        const all = shuffle(results.flat());
+        setRssVideos(all);
+        setVideos(all);
+        setQueue(all);
+        setCurrent(all[0] ?? null);
+        setLoading(false);
+      });
+      return;
+    }
+
     Promise.all(
-      activeChannel.sources.map(s =>
-        fetch(`/api/youtube?channelId=${s.id}`)
+      activeChannel.sources.map(source =>
+        fetch(`/api/youtube?channelId=${source.id}`)
           .then(r => r.json())
           .then(d => d.videos as Video[])
           .catch(() => [] as Video[])
@@ -169,8 +236,8 @@ export default function TVApp() {
     ).then(results => {
       const all = results.flat();
       const sorted = [...all].sort((a, b) => new Date(b.published).getTime() - new Date(a.published).getTime());
-      setRssVideos(sorted);
       const shuffled = shuffle(all);
+      setRssVideos(sorted);
       setVideos(shuffled);
       setQueue(shuffled);
       setCurrent(shuffled[0] ?? null);
@@ -219,7 +286,7 @@ export default function TVApp() {
   }, []);
 
   const formatDate = (d: string) =>
-    new Date(d).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" });
+    d ? new Date(d).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" }) : "";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", fontFamily: "monospace", fontSize: 12, background: "#0a0a0a", color: "#fff" }}>
