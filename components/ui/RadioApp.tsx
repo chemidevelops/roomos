@@ -48,6 +48,14 @@ export default function RadioApp() {
   const [tick, setTick] = useState(0);
   const [nowPlaying, setNowPlaying] = useState<Record<string, NowPlaying>>({});
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const trackingRef = useRef<{ station: string; start: number } | null>(null);
+
+  function logUsage(station: string, start: number) {
+    const seconds = Math.round((Date.now() - start) / 1000);
+    if (seconds < 10) return;
+    fetch("/api/usage", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "radio", label: station, seconds }) }).catch(() => {});
+  }
 
   // animación de onda
   useEffect(() => {
@@ -76,12 +84,17 @@ export default function RadioApp() {
       return;
     }
     // nueva emisora
+    // Log tiempo de la emisora anterior
+    if (trackingRef.current) {
+      logUsage(trackingRef.current.station, trackingRef.current.start);
+    }
     setLoading(true);
     if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ""; }
     const audio = new Audio(station.stream);
     audio.volume = vol;
     audio.play().then(() => { setLoading(false); setPlaying(true); }).catch(() => setLoading(false));
     audioRef.current = audio;
+    trackingRef.current = { station: station.name, start: Date.now() };
     setActive(stationId);
     setPlaying(true);
   }
@@ -103,7 +116,10 @@ export default function RadioApp() {
     if (audioRef.current) audioRef.current.volume = v;
   }
 
-  useEffect(() => () => { audioRef.current?.pause(); }, []);
+  useEffect(() => () => {
+    audioRef.current?.pause();
+    if (trackingRef.current) logUsage(trackingRef.current.station, trackingRef.current.start);
+  }, []);
 
   const activeStation = STATIONS.find(s => s.id === active);
   const np = active ? nowPlaying[active] : null;

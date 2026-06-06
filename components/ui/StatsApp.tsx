@@ -2,243 +2,156 @@
 
 import { useState, useEffect } from "react";
 
-interface BacklogItem {
-  id: string;
-  title: string;
-  category: string;
-  color?: string;
-  status: string;
-}
-
-interface ScheduleEntry {
-  id: string;
-  item_title?: string;
-  category?: string;
-  start_min: number;
-  end_min: number;
-}
-
-interface CategoryStats {
-  category: string;
+interface UsageRow {
+  type: string;
+  label: string;
+  total: number;
   count: number;
-  hours: number;
+  last: string;
 }
 
-const CELL: React.CSSProperties = {
-  border: "1px solid #808080",
-  padding: "3px 8px",
-  fontFamily: "var(--font-jetbrains-mono), monospace",
-  fontSize: "12px",
-  color: "#1a1a1a",
-  whiteSpace: "nowrap",
-};
-
-const HEADER_CELL: React.CSSProperties = {
-  ...CELL,
-  background: "#000080",
-  color: "#ffffff",
-  fontWeight: 700,
-};
-
-function last7Days(): string[] {
-  const days: string[] = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    days.push(d.toISOString().split("T")[0]);
-  }
-  return days;
+interface DayRow {
+  date: string;
+  type: string;
+  total: number;
 }
+
+function fmtTime(s: number) {
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
+const TYPE_LABELS: Record<string, string> = {
+  radio: "📻 Radio",
+  podcast: "🎙️ Podcast",
+  tv: "📺 TV",
+};
+
+const TYPE_COLORS: Record<string, string> = {
+  radio: "#1a1a1a",
+  podcast: "#555",
+  tv: "#888",
+};
 
 export default function StatsApp() {
-  const [categoryStats, setCategoryStats] = useState<CategoryStats[]>([]);
-  const [todayCount, setTodayCount] = useState(0);
-  const [totalBacklog, setTotalBacklog] = useState(0);
+  const [data, setData] = useState<{ byType: UsageRow[]; byDay: DayRow[] } | null>(null);
+  const [days, setDays] = useState(30);
   const [loading, setLoading] = useState(true);
+  const [activeType, setActiveType] = useState<string | null>(null);
 
   useEffect(() => {
-    async function load() {
-      try {
-        // Fetch backlog
-        const backlogRes = await fetch("/api/backlog");
-        const backlogItems: BacklogItem[] = await backlogRes.json();
+    setLoading(true);
+    fetch(`/api/usage?days=${days}`)
+      .then(r => r.json())
+      .then(setData)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [days]);
 
-        const catMap: Record<string, CategoryStats> = {};
-        for (const item of backlogItems) {
-          const cat = item.category || "Uncategorized";
-          if (!catMap[cat]) catMap[cat] = { category: cat, count: 0, hours: 0 };
-          catMap[cat].count++;
-        }
-        setTotalBacklog(backlogItems.length);
+  if (loading) return <div style={{ padding: 24, fontFamily: "monospace", color: "#aaa" }}>Cargando...</div>;
 
-        // Fetch schedule for last 7 days
-        const days = last7Days();
-        const today = days[days.length - 1];
+  if (!data || data.byType.length === 0) return (
+    <div style={{ padding: 24, fontFamily: "monospace", fontSize: 12, color: "#aaa", textAlign: "center" }}>
+      <div style={{ fontSize: 32, marginBottom: 12 }}>📊</div>
+      Sin datos todavía.<br />
+      <span style={{ fontSize: 11 }}>Escucha radio, podcasts o mira TV y vuelve.</span>
+    </div>
+  );
 
-        for (const day of days) {
-          try {
-            const schedRes = await fetch(`/api/schedule?date=${day}`);
-            const entries: ScheduleEntry[] = await schedRes.json();
+  const totals: Record<string, number> = {};
+  data.byType.forEach(r => { totals[r.type] = (totals[r.type] ?? 0) + r.total; });
+  const grandTotal = Object.values(totals).reduce((a, b) => a + b, 0);
+  const filtered = activeType ? data.byType.filter(r => r.type === activeType) : data.byType;
 
-            if (day === today) setTodayCount(entries.length);
-
-            for (const entry of entries) {
-              const cat = entry.category || "Uncategorized";
-              if (!catMap[cat]) catMap[cat] = { category: cat, count: 0, hours: 0 };
-              catMap[cat].hours += (entry.end_min - entry.start_min) / 60;
-            }
-          } catch {}
-        }
-
-        setCategoryStats(Object.values(catMap).sort((a, b) => b.count - a.count));
-      } catch {}
-      setLoading(false);
-    }
-    load();
-  }, []);
-
-  const maxHours = Math.max(...categoryStats.map((c) => c.hours), 1);
-
-  function asciiBar(hours: number) {
-    const len = Math.round((hours / maxHours) * 20);
-    return "█".repeat(len) || "░";
-  }
+  const last7 = [...new Set(data.byDay.map(r => r.date))].slice(0, 7).reverse();
+  const maxDay = Math.max(...last7.map(d =>
+    data.byDay.filter(r => r.date === d).reduce((a, r) => a + r.total, 0)
+  ), 1);
 
   return (
-    <div
-      style={{
-        background: "#c0c0c0",
-        minHeight: "100%",
-        fontFamily: "var(--font-jetbrains-mono), monospace",
-        fontSize: "12px",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      {/* Excel-style header */}
-      <div
-        style={{
-          background: "#000080",
-          color: "#ffffff",
-          padding: "4px 10px",
-          fontWeight: 700,
-          fontSize: "12px",
-          letterSpacing: "0.05em",
-          borderBottom: "2px solid #1a1a1a",
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-        }}
-      >
-        <span>📊</span>
-        <span>roomOS Stats [Book1]</span>
-        <span style={{ marginLeft: "auto", fontWeight: 400, fontSize: "11px", opacity: 0.8 }}>
-          Microsoft Excel 95
-        </span>
+    <div style={{ padding: "16px 20px", fontFamily: "monospace", fontSize: 12, overflowY: "auto", height: "100%" }}>
+
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase" }}>Stats</div>
+        <div style={{ display: "flex", gap: 4 }}>
+          {[7, 30, 90].map(d => (
+            <button key={d} onClick={() => setDays(d)} style={{
+              background: days === d ? "#1a1a1a" : "transparent",
+              color: days === d ? "#fff" : "#aaa",
+              border: "1px solid #ddd", padding: "2px 8px",
+              cursor: "pointer", fontFamily: "monospace", fontSize: 10,
+            }}>{d}d</button>
+          ))}
+        </div>
       </div>
 
-      {/* Formula bar */}
-      <div
-        style={{
-          background: "#c0c0c0",
-          borderBottom: "1px solid #808080",
-          padding: "2px 8px",
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          fontSize: "11px",
-        }}
-      >
-        <span style={{ background: "#ffffff", border: "1px solid #808080", padding: "1px 6px", minWidth: "40px", textAlign: "center" }}>A1</span>
-        <span style={{ color: "#808080" }}>fx</span>
-        <span style={{ background: "#ffffff", border: "1px solid #808080", flex: 1, padding: "1px 6px" }}>
-          =COUNTIF(backlog_items,&quot;*&quot;)
-        </span>
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 10, color: "#aaa", marginBottom: 4, letterSpacing: "0.1em" }}>TOTAL ÚLTIMOS {days} DÍAS</div>
+        <div style={{ fontSize: 28, fontWeight: 700 }}>{fmtTime(grandTotal)}</div>
       </div>
 
-      <div style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "16px", overflow: "auto" }}>
-        {loading ? (
-          <div style={{ color: "#808080", fontFamily: "var(--font-jetbrains-mono), monospace" }}>
-            Loading...
+      <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+        {Object.entries(totals).map(([type, total]) => (
+          <button key={type} onClick={() => setActiveType(activeType === type ? null : type)} style={{
+            flex: 1, padding: "10px 8px",
+            border: `1px solid ${activeType === type ? "#1a1a1a" : "#eee"}`,
+            background: activeType === type ? "#1a1a1a" : "transparent",
+            color: activeType === type ? "#fff" : "#333",
+            cursor: "pointer", fontFamily: "monospace", textAlign: "center",
+          }}>
+            <div style={{ fontSize: 16 }}>{TYPE_LABELS[type]?.split(" ")[0]}</div>
+            <div style={{ fontSize: 13, fontWeight: 700, marginTop: 4 }}>{fmtTime(total)}</div>
+            <div style={{ fontSize: 9, color: activeType === type ? "#aaa" : "#bbb", marginTop: 2 }}>
+              {Math.round(total / grandTotal * 100)}%
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {last7.length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 10, color: "#aaa", marginBottom: 8, letterSpacing: "0.1em" }}>ÚLTIMOS 7 DÍAS</div>
+          <div style={{ display: "flex", gap: 4, alignItems: "flex-end", height: 48 }}>
+            {last7.map(date => {
+              const dayTotal = data.byDay.filter(r => r.date === date).reduce((a, r) => a + r.total, 0);
+              const h = Math.max(2, Math.round((dayTotal / maxDay) * 48));
+              return (
+                <div key={date} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+                  <div style={{ width: "100%", height: h, background: "#1a1a1a" }} />
+                  <div style={{ fontSize: 8, color: "#bbb" }}>{date.slice(8)}</div>
+                </div>
+              );
+            })}
           </div>
-        ) : (
-          <>
-            {/* Section 1: Backlog by category */}
-            <div>
-              <div style={{ fontWeight: 700, color: "#000080", marginBottom: "4px", fontSize: "11px", letterSpacing: "0.05em" }}>
-                SHEET1: BACKLOG BY CATEGORY
-              </div>
-              <table style={{ borderCollapse: "collapse", width: "100%" }}>
-                <thead>
-                  <tr>
-                    <th style={HEADER_CELL}>Category</th>
-                    <th style={{ ...HEADER_CELL, textAlign: "right" }}>Count</th>
-                    <th style={{ ...HEADER_CELL, textAlign: "right" }}>% Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {categoryStats.map((row, i) => (
-                    <tr key={row.category}>
-                      <td style={{ ...CELL, background: i % 2 === 0 ? "#ffffff" : "#e8e8e8" }}>{row.category}</td>
-                      <td style={{ ...CELL, background: i % 2 === 0 ? "#ffffff" : "#e8e8e8", textAlign: "right" }}>{row.count}</td>
-                      <td style={{ ...CELL, background: i % 2 === 0 ? "#ffffff" : "#e8e8e8", textAlign: "right" }}>
-                        {totalBacklog > 0 ? ((row.count / totalBacklog) * 100).toFixed(1) : "0.0"}%
-                      </td>
-                    </tr>
-                  ))}
-                  {/* Summary row */}
-                  <tr>
-                    <td style={{ ...CELL, background: "#ffff99", fontWeight: 700 }}>TOTAL ITEMS IN BACKLOG</td>
-                    <td style={{ ...CELL, background: "#ffff99", fontWeight: 700, textAlign: "right" }}>{totalBacklog}</td>
-                    <td style={{ ...CELL, background: "#ffff99", fontWeight: 700, textAlign: "right" }}>100.0%</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+        </div>
+      )}
 
-            {/* Section 2: Weekly activity ASCII bar chart */}
-            <div>
-              <div style={{ fontWeight: 700, color: "#000080", marginBottom: "4px", fontSize: "11px", letterSpacing: "0.05em" }}>
-                SHEET2: WEEKLY ACTIVITY (LAST 7 DAYS)
+      <div>
+        <div style={{ fontSize: 10, color: "#aaa", marginBottom: 8, letterSpacing: "0.1em" }}>
+          {activeType ? TYPE_LABELS[activeType].toUpperCase() : "TODO"}
+          {activeType && (
+            <button onClick={() => setActiveType(null)} style={{ marginLeft: 8, background: "none", border: "none", color: "#bbb", cursor: "pointer", fontSize: 10 }}>✕</button>
+          )}
+        </div>
+        {filtered.slice(0, 20).map((row, i) => {
+          const pct = Math.round((row.total / grandTotal) * 100);
+          return (
+            <div key={i} style={{ marginBottom: 10 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+                <span style={{ fontSize: 11, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "75%" }}>
+                  {!activeType && <span style={{ color: "#bbb", marginRight: 6 }}>{TYPE_LABELS[row.type]?.split(" ")[0]}</span>}
+                  {row.label}
+                </span>
+                <span style={{ fontSize: 11, color: "#666", flexShrink: 0 }}>{fmtTime(row.total)}</span>
               </div>
-              <table style={{ borderCollapse: "collapse", width: "100%" }}>
-                <thead>
-                  <tr>
-                    <th style={HEADER_CELL}>Category</th>
-                    <th style={{ ...HEADER_CELL, textAlign: "right" }}>Hours</th>
-                    <th style={HEADER_CELL}>Chart</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {categoryStats.filter((c) => c.hours > 0).map((row, i) => (
-                    <tr key={row.category}>
-                      <td style={{ ...CELL, background: i % 2 === 0 ? "#ffffff" : "#e8e8e8" }}>{row.category}</td>
-                      <td style={{ ...CELL, background: i % 2 === 0 ? "#ffffff" : "#e8e8e8", textAlign: "right" }}>{row.hours.toFixed(1)}</td>
-                      <td style={{ ...CELL, background: i % 2 === 0 ? "#ffffff" : "#e8e8e8", color: "#000080", letterSpacing: "1px" }}>
-                        {asciiBar(row.hours)}
-                      </td>
-                    </tr>
-                  ))}
-                  {categoryStats.filter((c) => c.hours > 0).length === 0 && (
-                    <tr>
-                      <td colSpan={3} style={{ ...CELL, background: "#ffffff", color: "#808080", textAlign: "center" }}>
-                        No schedule data for last 7 days
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+              <div style={{ height: 3, background: "#f0f0f0" }}>
+                <div style={{ height: "100%", width: `${pct}%`, background: TYPE_COLORS[row.type] ?? "#1a1a1a" }} />
+              </div>
             </div>
-
-            {/* Summary */}
-            <div style={{ background: "#ffffcc", border: "1px solid #808080", padding: "6px 10px", fontSize: "12px" }}>
-              <div style={{ fontWeight: 700, color: "#000080" }}>SUMMARY</div>
-              <div>Today&apos;s schedule entries: <strong>{todayCount}</strong></div>
-              <div>Total backlog items: <strong>{totalBacklog}</strong></div>
-              <div>Categories tracked: <strong>{categoryStats.length}</strong></div>
-            </div>
-          </>
-        )}
+          );
+        })}
       </div>
     </div>
   );

@@ -45,6 +45,15 @@ export function getDb(): Database.Database {
       notes     TEXT NOT NULL DEFAULT ''
     );
 
+    CREATE TABLE IF NOT EXISTS usage_events (
+      id         TEXT PRIMARY KEY,
+      type       TEXT NOT NULL,  -- 'radio' | 'podcast' | 'tv'
+      label      TEXT NOT NULL,  -- station name / podcast title / video title
+      seconds    INTEGER NOT NULL DEFAULT 0,
+      date       TEXT NOT NULL,  -- YYYY-MM-DD
+      created_at INTEGER NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS calendar_events (
       id        TEXT PRIMARY KEY,
       title     TEXT NOT NULL,

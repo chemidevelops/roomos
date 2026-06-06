@@ -47,6 +47,14 @@ export default function TVApp() {
   const [streamUrl, setStreamUrl] = useState<string | null>(null);
   const [streamLoading, setStreamLoading] = useState(false);
   const [rssVideos, setRssVideos] = useState<Video[]>([]);
+  const trackingRef = useRef<{ label: string; start: number } | null>(null);
+
+  function logUsage(label: string, start: number) {
+    const seconds = Math.round((Date.now() - start) / 1000);
+    if (seconds < 10) return;
+    fetch("/api/usage", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "tv", label, seconds }) }).catch(() => {});
+  }
 
   // Cargar videos de todos los canales
   useEffect(() => {
@@ -69,6 +77,14 @@ export default function TVApp() {
       setLoading(false);
     });
   }, [activeChannel]);
+
+  // Log uso del video anterior
+  useEffect(() => {
+    if (trackingRef.current) {
+      logUsage(trackingRef.current.label, trackingRef.current.start);
+    }
+    if (current) trackingRef.current = { label: current.title, start: Date.now() };
+  }, [current]);
 
   // El stream va directo al proxy (que llama yt-dlp internamente)
   useEffect(() => {

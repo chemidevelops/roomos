@@ -53,6 +53,14 @@ export default function PodcastApp() {
   const [addingFeed, setAddingFeed] = useState(false);
   const [newUrl, setNewUrl] = useState("");
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const trackingRef = useRef<{ label: string; start: number } | null>(null);
+
+  function logUsage(label: string, start: number) {
+    const seconds = Math.round((Date.now() - start) / 1000);
+    if (seconds < 10) return;
+    fetch("/api/usage", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "podcast", label, seconds }) }).catch(() => {});
+  }
 
   useEffect(() => {
     setLoading(true);
@@ -65,6 +73,7 @@ export default function PodcastApp() {
   }, [activeFeed, feeds]);
 
   function playEpisode(ep: Episode) {
+    if (trackingRef.current) logUsage(trackingRef.current.label, trackingRef.current.start);
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.src = "";
@@ -76,6 +85,7 @@ export default function PodcastApp() {
     audio.ondurationchange = () => setDuration(audio.duration);
     audio.onended = () => setPlaying(false);
     audioRef.current = audio;
+    trackingRef.current = { label: ep.title, start: Date.now() };
     setSelected(ep);
     setPlaying(true);
     setProgress(0);
@@ -121,7 +131,10 @@ export default function PodcastApp() {
       : `${m}:${String(sec).padStart(2,"0")}`;
   }
 
-  useEffect(() => () => { audioRef.current?.pause(); }, []);
+  useEffect(() => () => {
+    audioRef.current?.pause();
+    if (trackingRef.current) logUsage(trackingRef.current.label, trackingRef.current.start);
+  }, []);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", fontFamily: "monospace", fontSize: 12 }}>
