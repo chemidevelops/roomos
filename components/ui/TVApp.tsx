@@ -150,13 +150,16 @@ export default function TVApp() {
                 style={{ width: "100%", height: "100%", objectFit: "contain" }}
               />
             )}
-            {!streamLoading && !streamUrl && (
-              <div style={{ color: "#555", fontSize: 11, fontFamily: "monospace", textAlign: "center", padding: 20 }}>
-                Error cargando video.<br />
-                <button onClick={next} style={{ marginTop: 8, background: "#333", color: "#fff", border: "none", padding: "4px 12px", cursor: "pointer", fontFamily: "monospace" }}>
-                  Siguiente →
-                </button>
-              </div>
+            {!streamLoading && !streamUrl && current && (
+              <iframe
+                key={current.id}
+                src={`https://www.youtube-nocookie.com/embed/${current.id}?autoplay=1&rel=0`}
+                title={current.title}
+                allow="autoplay; encrypted-media; picture-in-picture"
+                allowFullScreen
+                referrerPolicy="strict-origin-when-cross-origin"
+                style={{ width: "100%", height: "100%", border: 0 }}
+              />
             )}
           </div>
           {/* Info bar */}
