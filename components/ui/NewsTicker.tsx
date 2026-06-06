@@ -15,6 +15,7 @@ export default function NewsTicker() {
   if (items.length === 0) return null;
 
   const text = items.join("   ·   ") + "   ·   ";
+  const duration = Math.max(80, items.length * 9);
 
   return (
     <div style={{
@@ -31,39 +32,49 @@ export default function NewsTicker() {
       overflow: "hidden",
       zIndex: 9998,
     }}>
+      <style>{`
+        @keyframes ticker {
+          0%   { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .ticker-wrap {
+          display: flex;
+          white-space: nowrap;
+          animation: ticker ${duration}s linear infinite;
+          will-change: transform;
+        }
+        .ticker-item {
+          font-size: 12px;
+          color: #ccc;
+          font-family: monospace;
+          letter-spacing: 0.04em;
+          padding-right: 0;
+        }
+      `}</style>
+
       {/* Label */}
       <div style={{
         flexShrink: 0,
         padding: "0 8px",
         borderRight: "1px solid #333",
-        fontSize: 11,
+        fontSize: 10,
         fontWeight: 700,
         letterSpacing: "0.15em",
         color: "#FF6600",
         fontFamily: "monospace",
         whiteSpace: "nowrap",
+        zIndex: 1,
+        background: "#111",
       }}>
         EUROGAMER.ES
       </div>
 
-      {/* Scrolling text */}
-      <div style={{ flex: 1, overflow: "hidden", position: "relative" }}>
-        <style>{`
-          @keyframes ticker {
-            from { transform: translateX(100%); }
-            to   { transform: translateX(-100%); }
-          }
-          .ticker-text {
-            display: inline-block;
-            white-space: nowrap;
-            animation: ticker ${Math.max(60, items.length * 7)}s linear infinite;
-            font-size: 12px;
-            color: #ccc;
-            font-family: monospace;
-            letter-spacing: 0.04em;
-          }
-        `}</style>
-        <span className="ticker-text">{text}</span>
+      {/* Scrolling — duplicado para loop sin salto */}
+      <div style={{ flex: 1, overflow: "hidden" }}>
+        <div className="ticker-wrap">
+          <span className="ticker-item">{text}</span>
+          <span className="ticker-item">{text}</span>
+        </div>
       </div>
     </div>
   );

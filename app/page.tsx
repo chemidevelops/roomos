@@ -20,7 +20,7 @@ import PodcastApp from "@/components/ui/PodcastApp";
 import RadioApp from "@/components/ui/RadioApp";
 import TVApp from "@/components/ui/TVApp";
 import StickyLayer, { addStickyRef } from "@/components/ui/StickyLayer";
-import { WALLPAPER_STYLES, STORAGE_KEY, type WallpaperKey } from "@/components/ui/SettingsApp";
+import { WALLPAPER_STYLES, STORAGE_KEY, THEME_KEY, type WallpaperKey, type ThemeKey } from "@/components/ui/SettingsApp";
 import NewsTicker from "@/components/ui/NewsTicker";
 
 /* ─────────────────────────────────────────────────────────────
@@ -399,6 +399,7 @@ function Desktop() {
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
   const [maxZ, setMaxZ] = useState(11);
   const [wallpaper, setWallpaper] = useState<WallpaperKey>("retro-mac");
+  const [theme, setTheme] = useState<ThemeKey>("retro-mac");
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
   const isMobileRef = useRef(isMobile);
   const desktopRef = useRef<HTMLDivElement>(null);
@@ -408,14 +409,19 @@ function Desktop() {
     isMobileRef.current = vw < 768;
     setWindows(makeWindows(vw));
 
-    // Load wallpaper
+    // Load wallpaper + theme
     const saved = localStorage.getItem(STORAGE_KEY) as WallpaperKey | null;
     if (saved && WALLPAPER_STYLES[saved]) setWallpaper(saved);
+    const savedTheme = localStorage.getItem(THEME_KEY) as ThemeKey | null;
+    if (savedTheme) setTheme(savedTheme);
 
-    // Listen for wallpaper changes from SettingsApp
+    // Listen for changes from SettingsApp
     const onStorage = (e: StorageEvent) => {
       if (e.key === STORAGE_KEY && e.newValue && WALLPAPER_STYLES[e.newValue as WallpaperKey]) {
         setWallpaper(e.newValue as WallpaperKey);
+      }
+      if (e.key === THEME_KEY && e.newValue) {
+        setTheme(e.newValue as ThemeKey);
       }
     };
     window.addEventListener("storage", onStorage);
@@ -587,7 +593,7 @@ function Desktop() {
                 onSelect={() => setSelectedIcon(di.id)}
                 onDoubleClick={() => handleIconActivate(di.id)}
                 onDragEnd={(x, y) => updateIconPosition(di.id, x, y)}
-                retroMode={wallpaper === "retro-mac"}
+                retroMode={theme === "retro-mac"}
               />
             </div>
           );
