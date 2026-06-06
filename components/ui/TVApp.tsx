@@ -183,7 +183,6 @@ export default function TVApp() {
                 controls
                 playsInline
                 autoPlay
-                defaultMuted
                 onEnded={() => { if (!nextCalledRef.current) { nextCalledRef.current = true; nextRef.current(); } }}
                 onTimeUpdate={e => {
                   const v = e.currentTarget;
@@ -195,6 +194,7 @@ export default function TVApp() {
                 ref={el => {
                   if (!el) return;
                   el.muted = true;
+                  el.setAttribute("muted", "");
                   const tryPlay = () => {
                     el.play().then(() => {
                       // Desmutear al primer toque
