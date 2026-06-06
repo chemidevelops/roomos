@@ -36,7 +36,7 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-const INVIDIOUS = "https://invidious.nerdvpn.de";
+const PLAYER_BASE = "https://piped.video";
 
 export default function TVApp() {
   const [activeChannel, setActiveChannel] = useState(CHANNELS[0]);
@@ -83,7 +83,7 @@ export default function TVApp() {
     new Date(d).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" });
 
   const embedUrl = current
-    ? `${INVIDIOUS}/embed/${current.id}?autoplay=1&modestbranding=1`
+    ? `${PLAYER_BASE}/embed/${current.id}?autoplay=1&modestbranding=1&rel=0`
     : null;
 
   return (
