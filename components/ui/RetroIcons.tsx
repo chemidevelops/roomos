@@ -62,7 +62,7 @@ const SOLITAIRE_SVG = `data:image/svg+xml,${encodeURIComponent(cards)}`;
 export const RETRO_ICON_URLS: Record<string, string> = {
   calendar:   `${BASE}/gnome-calendar.png`,
   notes:      `${BASE}/xfce4-notes-plugin.png`,
-  settings:   SETTINGS_SVG,
+  settings:   `https://raw.githubusercontent.com/BlissThatMiss/MoNine/master/categories/32/preferences-system.png`,
   solitaire:  SOLITAIRE_SVG,
   terminal:   `${BASE}/org.xfce.terminal.png`,
   calculator: `${BASE}/accessories-calculator.png`,
