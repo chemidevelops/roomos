@@ -43,6 +43,21 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function() {
+            var unlocked = false;
+            function unlock() {
+              if (unlocked) return;
+              var v = document.createElement('video');
+              v.src = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAAAAhtZGF0AAAA';
+              v.muted = true;
+              v.playsInline = true;
+              v.play().then(function(){ v.pause(); unlocked = true; }).catch(function(){});
+            }
+            document.addEventListener('touchstart', unlock, { once: true, passive: true });
+            document.addEventListener('click', unlock, { once: true });
+          })();
+        ` }} />
       </head>
       <body
         className="min-h-full flex flex-col overflow-hidden"
