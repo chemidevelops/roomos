@@ -19,6 +19,7 @@ import RadioApp from "@/components/ui/RadioApp";
 import TVApp from "@/components/ui/TVApp";
 import StickyLayer, { addStickyRef } from "@/components/ui/StickyLayer";
 import { WALLPAPER_STYLES, STORAGE_KEY, type WallpaperKey } from "@/components/ui/SettingsApp";
+import MobileOS from "@/components/ui/MobileOS";
 
 /* ─────────────────────────────────────────────────────────────
    Types
@@ -685,5 +686,12 @@ function Desktop() {
    Page
 ───────────────────────────────────────────────────────────── */
 export default function Home() {
-  return <Desktop />;
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+  return isMobile ? <MobileOS /> : <Desktop />;
 }
