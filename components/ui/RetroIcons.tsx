@@ -1,27 +1,27 @@
 // Mac OS 9 style icons from BlissThatMiss/MoNine
 const BASE = "https://raw.githubusercontent.com/BlissThatMiss/MoNine/master/apps/32";
 
-const gear = `<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
-  <!-- 8 clear teeth -->
-  <rect x="12" y="0" width="8" height="6" fill="#7a7a7a"/>
-  <rect x="12" y="26" width="8" height="6" fill="#7a7a7a"/>
-  <rect x="0" y="12" width="6" height="8" fill="#7a7a7a"/>
-  <rect x="26" y="12" width="6" height="8" fill="#7a7a7a"/>
-  <rect x="3" y="3" width="6" height="6" fill="#7a7a7a"/>
-  <rect x="23" y="3" width="6" height="6" fill="#7a7a7a"/>
-  <rect x="3" y="23" width="6" height="6" fill="#7a7a7a"/>
-  <rect x="23" y="23" width="6" height="6" fill="#7a7a7a"/>
-  <!-- Body -->
-  <rect x="6" y="6" width="20" height="20" fill="#aaa"/>
-  <rect x="4" y="10" width="24" height="12" fill="#aaa"/>
-  <rect x="10" y="4" width="12" height="24" fill="#aaa"/>
-  <!-- Highlight -->
-  <rect x="6" y="6" width="20" height="1" fill="#ccc"/>
-  <rect x="6" y="6" width="1" height="20" fill="#ccc"/>
+const gear = `<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="g" cx="40%" cy="35%">
+      <stop offset="0%" stop-color="#d0d0d0"/>
+      <stop offset="100%" stop-color="#888"/>
+    </radialGradient>
+  </defs>
+  <!-- Gear shape using polygon -->
+  <circle cx="16" cy="16" r="13" fill="url(#g)"/>
+  <!-- Teeth as small rects rotated via transform -->
+  ${[0,45,90,135,180,225,270,315].map(a => {
+    const r = a * Math.PI / 180;
+    const cx = 16 + Math.cos(r) * 11;
+    const cy = 16 + Math.sin(r) * 11;
+    return `<rect x="${(cx-2.5).toFixed(1)}" y="${(cy-2.5).toFixed(1)}" width="5" height="5" fill="#888" transform="rotate(${a} ${cx.toFixed(1)} ${cy.toFixed(1)})"/>`;
+  }).join('')}
+  <!-- Cover teeth edges with circle -->
+  <circle cx="16" cy="16" r="10" fill="url(#g)"/>
   <!-- Center hole -->
-  <rect x="12" y="10" width="8" height="12" fill="#333"/>
-  <rect x="10" y="12" width="12" height="8" fill="#333"/>
-  <rect x="11" y="11" width="10" height="10" fill="#333"/>
+  <circle cx="16" cy="16" r="4.5" fill="#444"/>
+  <circle cx="16" cy="16" r="3.5" fill="#222"/>
 </svg>`;
 
 const cards = `<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
@@ -81,7 +81,7 @@ export function RetroIcon({ id, size = 40 }: { id: string; size?: number }) {
       src={url}
       width={size}
       height={size}
-      style={{ imageRendering: "pixelated", display: "block" }}
+      style={{ imageRendering: url.startsWith("data:") ? "auto" : "pixelated", display: "block" }}
       onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
     />
   );
