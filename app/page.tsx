@@ -16,6 +16,7 @@ import StatsApp from "@/components/ui/StatsApp";
 import AlarmApp from "@/components/ui/AlarmApp";
 import RSSApp from "@/components/ui/RSSApp";
 import CalendarApp from "@/components/ui/CalendarApp";
+import PodcastApp from "@/components/ui/PodcastApp";
 import RadioApp from "@/components/ui/RadioApp";
 import TVApp from "@/components/ui/TVApp";
 import StickyLayer, { addStickyRef } from "@/components/ui/StickyLayer";
@@ -57,6 +58,7 @@ const APP_ICONS = [
   { id: "calculator", icon: "🧮", label: "Calc" },
   { id: "stats",      icon: "📊", label: "Stats" },
   { id: "rss",        icon: "📡", label: "RSS" },
+  { id: "podcasts",   icon: "🎙️", label: "Podcasts" },
   { id: "radio",      icon: "📻", label: "Radio" },
   { id: "tv",         icon: "📺", label: "TV" },
 ];
@@ -164,6 +166,18 @@ function makeWindows(vw: number): WindowState[] {
       position: mobile ? { x: 8, y: 60 } : { x: 180, y: 60 },
       width: W ?? 480,
       height: "auto",
+    },
+    {
+      id: "podcasts",
+      title: "Podcasts",
+      icon: "🎙️",
+      open: false,
+      minimized: false,
+      focused: false,
+      zIndex: 1,
+      position: mobile ? { x: 8, y: 60 } : { x: 200, y: 80 },
+      width: W ?? 620,
+      height: 480,
     },
     {
       id: "rss",
@@ -350,6 +364,7 @@ function WindowContent({ id, onOpenWindow }: { id: string; onOpenWindow: (id: st
     case "alarms":      return <AlarmApp />;
     case "rss":         return <RSSApp />;
     case "calendar":    return <CalendarApp />;
+    case "podcasts":    return <PodcastApp />;
     case "radio":       return <RadioApp />;
     case "tv":          return <TVApp />;
     default:            return <div style={{ padding: "24px", textAlign: "center", color: "#6b6560" }}>{id}</div>;

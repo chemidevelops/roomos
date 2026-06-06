@@ -52,11 +52,14 @@ const formatDate = (d: string) =>
   new Date(d).toLocaleDateString("es-ES", { day: "numeric", month: "short" });
 
 export default function RSSApp() {
+  const [feeds, setFeeds] = useState(FEEDS);
   const [items, setItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<FeedItem | null>(null);
   const [activeFeed, setActiveFeed] = useState<string>("all");
+  const [addingFeed, setAddingFeed] = useState(false);
+  const [newFeedUrl, setNewFeedUrl] = useState("");
   // mobile: "feeds" | "list" | "article"
   const [mobilePane, setMobilePane] = useState<"feeds" | "list" | "article">("list");
   const [isMobile, setIsMobile] = useState(false);
@@ -68,14 +71,14 @@ export default function RSSApp() {
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  useEffect(() => { fetchFeeds(); }, []);
+  useEffect(() => { fetchFeeds(); }, [feeds]);
 
   async function fetchFeeds() {
     setLoading(true);
     setError(null);
     try {
       const results = await Promise.all(
-        FEEDS.map(async (feed) => {
+        feeds.map(async (feed) => {
           const res = await fetch(`/api/rss?url=${encodeURIComponent(feed.url)}`);
           if (!res.ok) throw new Error(`Error fetching ${feed.name}`);
           const data = await res.json();
@@ -104,11 +107,22 @@ export default function RSSApp() {
     if (isMobile) setMobilePane("list");
   }
 
+  async function addRssFeed() {
+    if (!newFeedUrl.trim()) return;
+    const res = await fetch(`/api/rss?url=${encodeURIComponent(newFeedUrl)}`);
+    const data = await res.json();
+    if (data.items?.length) {
+      const name = newFeedUrl.split("/").filter(Boolean).pop() ?? newFeedUrl;
+      setFeeds(f => [...f, { name, url: newFeedUrl }]);
+    }
+    setNewFeedUrl(""); setAddingFeed(false);
+  }
+
   // ── Sidebar feeds ──────────────────────────────────────────────────────────
   const SidebarContent = () => (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", padding: "8px 0" }}>
       <div style={{ padding: "4px 10px", fontSize: 10, color: "#888", textTransform: "uppercase", letterSpacing: "0.08em" }}>Feeds</div>
-      {[{ name: "all", label: "Todos" }, ...FEEDS.map(f => ({ name: f.name, label: f.name }))].map(f => (
+      {[{ name: "all", label: "Todos" }, ...feeds.map(f => ({ name: f.name, label: f.name }))].map(f => (
         <button key={f.name} onClick={() => selectFeed(f.name)} style={{
           background: activeFeed === f.name ? "#1a1a1a" : "transparent",
           color: activeFeed === f.name ? "#fff" : "#1a1a1a",
@@ -117,10 +131,24 @@ export default function RSSApp() {
         }}>{f.label}</button>
       ))}
       <div style={{ flex: 1 }} />
-      <button onClick={fetchFeeds} style={{
-        margin: "8px", padding: "4px", background: "#f0f0f0",
-        border: "1px solid #ccc", cursor: "pointer", fontSize: 11, fontFamily: "monospace",
-      }}>↻ Actualizar</button>
+      {addingFeed ? (
+        <div style={{ padding: 8, borderTop: "1px solid #eee" }}>
+          <input placeholder="URL del RSS" value={newFeedUrl}
+            onChange={e => setNewFeedUrl(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && addRssFeed()}
+            style={{ width: "100%", fontSize: 10, fontFamily: "monospace", border: "1px solid #ddd", padding: "3px 5px", marginBottom: 4, boxSizing: "border-box" }}
+            autoFocus />
+          <div style={{ display: "flex", gap: 4 }}>
+            <button onClick={addRssFeed} style={{ flex: 1, fontSize: 9, background: "#1a1a1a", color: "#fff", border: "none", padding: "3px", cursor: "pointer", fontFamily: "monospace" }}>OK</button>
+            <button onClick={() => setAddingFeed(false)} style={{ flex: 1, fontSize: 9, background: "none", border: "1px solid #ddd", padding: "3px", cursor: "pointer", fontFamily: "monospace" }}>✕</button>
+          </div>
+        </div>
+      ) : (
+        <div style={{ display: "flex", borderTop: "1px solid #eee" }}>
+          <button onClick={() => setAddingFeed(true)} style={{ flex: 1, background: "none", border: "none", padding: "6px 10px", cursor: "pointer", fontSize: 10, color: "#999", fontFamily: "monospace", textAlign: "left" }}>+ Añadir</button>
+          <button onClick={fetchFeeds} style={{ background: "none", border: "none", padding: "6px 8px", cursor: "pointer", fontSize: 12, color: "#999" }}>↻</button>
+        </div>
+      )}
     </div>
   );
 
