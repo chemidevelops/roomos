@@ -60,9 +60,10 @@ const CHANNELS = [
     label: "RETRO",
     type: "playlist" as const,
     playlists: [
-      "PLg9cBZGseLNsV5NTxxFuaSwjZuDGUwo0T",
+      "PLhRdlS4yaDvI8Jnx0_Tch6SIW_nkZTcoC",
       "PLH4SfqNVbXjNDUq-XgO9NTBUwN_cOzw4T",
     ],
+    startAt: 15,
     sources: [],
     crt: true,
   },
@@ -137,7 +138,7 @@ function loadYouTubeApi(): Promise<YouTubeNamespace> {
   return youtubeApiPromise;
 }
 
-function YouTubeFallback({ video, onEnded }: { video: Video; onEnded: () => void }) {
+function YouTubeFallback({ video, onEnded, startAt = 0 }: { video: Video; onEnded: () => void; startAt?: number }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<YouTubePlayerInstance | null>(null);
   const onEndedRef = useRef(onEnded);
@@ -158,7 +159,7 @@ function YouTubeFallback({ video, onEnded }: { video: Video; onEnded: () => void
       if (cancelled || !containerRef.current) return;
       playerRef.current = new YT.Player(containerRef.current, {
         videoId: videoIdRef.current,
-        playerVars: { autoplay: 1, controls: 1, playsinline: 1, rel: 0 },
+        playerVars: { autoplay: 1, controls: 1, playsinline: 1, rel: 0, start: startAt },
         events: {
           onReady: event => {
             readyRef.current = true;
@@ -369,7 +370,7 @@ export default function TVApp() {
               position: "relative",
               overflow: "hidden",
             } : { position: "absolute", inset: 0 }}>
-            {current && <YouTubeFallback video={current} onEnded={advanceOnce} />}
+            {current && <YouTubeFallback video={current} onEnded={advanceOnce} startAt={(activeChannel as any).startAt ?? 0} />}
             {/* CRT overlay for retro channel */}
             {(activeChannel as any).crt && (
               <div style={{
