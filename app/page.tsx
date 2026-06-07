@@ -648,8 +648,7 @@ function Desktop() {
 export default function Home() {
   const [isTV, setIsTV] = useState(false);
   useEffect(() => {
-    const ua = navigator.userAgent;
-    const tv = /AppleTV|TV Safari|TVOS|tvOS/i.test(ua) || (window.innerWidth >= 1920 && window.innerHeight >= 1080 && /Safari/.test(ua) && !/iPhone|iPad|Mac/.test(ua));
+    const tv = new URLSearchParams(window.location.search).get("tv") === "1";
     setIsTV(tv);
   }, []);
   if (isTV) return <TVLayout />;
