@@ -2,35 +2,23 @@
 
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import RadioApp from "./RadioApp";
-import RSSApp from "./RSSApp";
-import NotesApp from "./NotesApp";
-import CalendarApp from "./CalendarApp";
-import PodcastApp from "./PodcastApp";
-import StatsApp from "./StatsApp";
+import TVRadioApp from "./TVRadioApp";
+import TVPodcastApp from "./TVPodcastApp";
 import { RETRO_ICON_URLS } from "./RetroIcons";
 const TVApp = dynamic(() => import("./TVApp"), { ssr: false });
 
-type AppId = "tv" | "radio" | "rss" | "podcasts" | "calendar" | "notes" | "stats" | null;
+type AppId = "tv" | "radio" | "podcasts" | null;
 
 const APPS: { id: AppId; label: string }[] = [
   { id: "tv",       label: "TV" },
   { id: "radio",    label: "Radio" },
-  { id: "rss",      label: "Feeds" },
   { id: "podcasts", label: "Podcasts" },
-  { id: "calendar", label: "Agenda" },
-  { id: "notes",    label: "Notas" },
-  { id: "stats",    label: "Stats" },
 ];
 
 function AppContent({ id }: { id: AppId }) {
   if (id === "tv")       return <TVApp />;
-  if (id === "radio")    return <RadioApp />;
-  if (id === "rss")      return <RSSApp />;
-  if (id === "podcasts") return <PodcastApp />;
-  if (id === "calendar") return <CalendarApp />;
-  if (id === "notes")    return <NotesApp />;
-  if (id === "stats")    return <StatsApp />;
+  if (id === "radio")    return <TVRadioApp />;
+  if (id === "podcasts") return <TVPodcastApp />;
   return null;
 }
 
@@ -119,7 +107,7 @@ export default function TVLayout() {
       <div style={{
         flex: 1,
         display: "grid",
-        gridTemplateColumns: "repeat(4, 1fr)",
+        gridTemplateColumns: "repeat(3, 1fr)",
         gap: 24,
         padding: "16px 60px 24px",
         alignContent: "center",
