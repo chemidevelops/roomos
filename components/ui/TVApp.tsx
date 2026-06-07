@@ -332,11 +332,9 @@ export default function TVApp() {
       <div style={{ display: "flex", alignItems: "stretch", gap: 0, borderBottom: "1px solid #333", flexShrink: 0 }}>
         {CHANNELS.map(ch => (
           <button key={ch.id} onClick={() => setActiveChannel(ch)} style={{
-            background: "transparent",
-            color: activeChannel.id === ch.id ? "#fff" : "#888",
-            border: "none",
-            borderBottom: activeChannel.id === ch.id ? "2px solid #fff" : "2px solid transparent",
-            padding: "10px 14px",
+            background: activeChannel.id === ch.id ? "#fff" : "transparent",
+            color: activeChannel.id === ch.id ? "#000" : "#888",
+            border: "none", padding: "10px 14px",
             cursor: "pointer", fontFamily: "monospace",
             fontSize: 11, fontWeight: 700, letterSpacing: "0.08em",
             display: "flex", alignItems: "center",
@@ -344,13 +342,13 @@ export default function TVApp() {
         ))}
         <div style={{ flex: 1 }} />
         <button onClick={() => setMode("tv")} style={{
-          background: mode === "tv" ? "#fff" : "transparent",
+          background: mode === "tv" ? "#f5c800" : "transparent",
           color: mode === "tv" ? "#000" : "#888",
           border: "none", padding: "10px 16px",
           cursor: "pointer", fontFamily: "monospace", fontSize: 12, fontWeight: 700,
         }}>▶ TV</button>
         <button onClick={() => setMode("rss")} style={{
-          background: mode === "rss" ? "#fff" : "transparent",
+          background: mode === "rss" ? "#f5c800" : "transparent",
           color: mode === "rss" ? "#000" : "#888",
           border: "none", padding: "10px 16px",
           cursor: "pointer", fontFamily: "monospace", fontSize: 12, fontWeight: 700,
