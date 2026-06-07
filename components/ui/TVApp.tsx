@@ -145,10 +145,12 @@ function YouTubeFallback({ video, onEnded }: { video: Video; onEnded: () => void
   const onEndedRef = useRef(onEnded);
   const videoIdRef = useRef(video.id);
   const readyRef = useRef(false);
+  const [playing, setPlaying] = useState(false);
 
   useEffect(() => { onEndedRef.current = onEnded; }, [onEnded]);
   useEffect(() => {
     videoIdRef.current = video.id;
+    setPlaying(false); // reset overlay on video change
     if (readyRef.current) playerRef.current?.loadVideoById(video.id);
   }, [video.id]);
 
@@ -164,12 +166,11 @@ function YouTubeFallback({ video, onEnded }: { video: Video; onEnded: () => void
         events: {
           onReady: event => {
             readyRef.current = true;
-            if (isMobile) {
-              event.target.mute();
-            }
+            if (isMobile) event.target.mute();
             event.target.playVideo();
           },
           onStateChange: event => {
+            if (event.data === 1) setPlaying(true); // PLAYING
             if (event.data === YT.PlayerState.ENDED) onEndedRef.current();
           },
           onError: (event: { data: number }) => {
@@ -189,7 +190,12 @@ function YouTubeFallback({ video, onEnded }: { video: Video; onEnded: () => void
     };
   }, []);
 
-  return <div ref={containerRef} style={{ width: "100%", height: "100%" }} />;
+  return (
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      <div ref={containerRef} style={{ width: "100%", height: "100%" }} />
+      {!playing && <div style={{ position: "absolute", inset: 0, background: "#000", zIndex: 1 }} />}
+    </div>
+  );
 }
 
 
@@ -233,14 +239,8 @@ export default function TVApp() {
             })))
             .catch(() => [] as Video[])
         )
-      ).then(async results => {
-        const raw = shuffle(results.flat());
-        const checked = await fetch("/api/embeddable", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ids: raw.map(v => v.id) }),
-        }).then(r => r.json()).then(d => new Set(d.ids as string[])).catch(() => null);
-        const all = checked ? raw.filter(v => checked.has(v.id)) : raw;
+      ).then(results => {
+        const all = shuffle(results.flat());
         setRssVideos(all);
         setVideos(all);
         setQueue(all);
@@ -258,15 +258,8 @@ export default function TVApp() {
             .then(d => d.videos as Video[])
             .catch(() => [] as Video[])
         )
-      ).then(async results => {
-        const raw = shuffle(results.flat());
-        // Filter non-embeddable videos
-        const checked = await fetch("/api/embeddable", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ids: raw.map(v => v.id) }),
-        }).then(r => r.json()).then(d => new Set(d.ids as string[])).catch(() => null);
-        const all = checked ? raw.filter(v => checked.has(v.id)) : raw;
+      ).then(results => {
+        const all = shuffle(results.flat());
         setRssVideos(all);
         setVideos(all);
         setQueue(all);
@@ -283,16 +276,11 @@ export default function TVApp() {
           .then(d => d.videos as Video[])
           .catch(() => [] as Video[])
       )
-    ).then(async results => {
-      const raw = results.flat();
-      const sorted = [...raw].sort((a, b) => new Date(b.published).getTime() - new Date(a.published).getTime());
-      const checked = await fetch("/api/embeddable", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ids: raw.map(v => v.id) }),
-      }).then(r => r.json()).then(d => new Set(d.ids as string[])).catch(() => null);
-      const shuffled = shuffle(checked ? raw.filter(v => checked.has(v.id)) : raw);
-      setRssVideos(checked ? sorted.filter(v => checked.has(v.id)) : sorted);
+    ).then(results => {
+      const all = results.flat();
+      const sorted = [...all].sort((a, b) => new Date(b.published).getTime() - new Date(a.published).getTime());
+      const shuffled = shuffle(all);
+      setRssVideos(sorted);
       setVideos(shuffled);
       setQueue(shuffled);
       setCurrent(shuffled[0] ?? null);
