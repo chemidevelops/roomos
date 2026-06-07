@@ -63,7 +63,7 @@ const CHANNELS = [
       "PLhRdlS4yaDvI8Jnx0_Tch6SIW_nkZTcoC",
       "PLH4SfqNVbXjNDUq-XgO9NTBUwN_cOzw4T",
     ],
-    startAt: 15,
+    startAt: 19,
     sources: [],
     crt: true,
   },
@@ -210,9 +210,12 @@ export default function TVApp() {
 
   // Emitir evento cuando cambia el canal (para resize PiP en retro)
   useEffect(() => {
-    window.dispatchEvent(new CustomEvent("roomos-tv-channel", {
-      detail: { retro: !!(activeChannel as any).crt }
-    }));
+    const timer = setTimeout(() => {
+      window.dispatchEvent(new CustomEvent("roomos-tv-channel", {
+        detail: { retro: !!(activeChannel as any).crt }
+      }));
+    }, 50);
+    return () => clearTimeout(timer);
   }, [activeChannel]);
 
   // Cargar videos del canal activo
