@@ -188,9 +188,9 @@ function makeWindows(vw: number): WindowState[] {
       minimized: false,
       focused: false,
       zIndex: 1,
-      position: mobile ? { x: 4, y: 44 } : { x: 160, y: 60 },
+      position: mobile ? { x: 8, y: 60 } : { x: 160, y: 60 },
       width: W ?? 640,
-      height: mobile ? Math.min(320, Math.floor((W ?? 640) * 9/16)) : 420,
+      height: 420,
     },
     {
       id: "radio",
