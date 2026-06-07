@@ -195,8 +195,8 @@ function YouTubeFallback({ video, onEnded, startAt = 0, onError, playerRefOut }:
 
   return (
     <>
-      <style>{`#tv-player-wrap iframe { width: 100% !important; height: 100% !important; }`}</style>
-      <div id="tv-player-wrap" ref={containerRef} style={{ width: "100%", height: "100%" }} />
+      <style>{`#tv-player-wrap, #tv-player-wrap > div, #tv-player-wrap iframe { width: 100% !important; height: 100% !important; position: absolute !important; top: 0 !important; left: 0 !important; }`}</style>
+      <div id="tv-player-wrap" ref={containerRef} style={{ width: "100%", height: "100%", position: "relative", overflow: "hidden" }} />
     </>
   );
 }
