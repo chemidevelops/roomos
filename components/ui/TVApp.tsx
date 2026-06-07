@@ -101,8 +101,6 @@ type YouTubeNamespace = {
     element: HTMLDivElement,
     options: {
       videoId: string;
-      width?: string | number;
-      height?: string | number;
       playerVars: Record<string, number>;
       events: {
         onReady: (event: { target: YouTubePlayerInstance }) => void;
@@ -167,12 +165,6 @@ function YouTubeFallback({ video, onEnded, startAt = 0, onError, playerRefOut }:
           onReady: event => {
             readyRef.current = true;
             if (playerRefOut) playerRefOut.current = event.target;
-            // Force iframe to fill container (YouTube sets inline px dimensions)
-            const iframe = containerRef.current?.querySelector("iframe");
-            if (iframe) {
-              iframe.style.width = "100%";
-              iframe.style.height = "100%";
-            }
             if (isMobile) event.target.mute();
             event.target.playVideo();
           },
@@ -197,11 +189,7 @@ function YouTubeFallback({ video, onEnded, startAt = 0, onError, playerRefOut }:
     };
   }, []);
 
-  return (
-    <>
-      <div ref={containerRef} style={{ width: "100%", height: "100%" }} />
-    </>
-  );
+  return <div ref={containerRef} style={{ width: "100%", height: "100%" }} />;
 }
 
 
@@ -220,13 +208,6 @@ export default function TVApp() {
   const nextCalledRef = useRef(false);
   const ytPlayerRef = useRef<YouTubePlayerInstance | null>(null);
   const [ytPaused, setYtPaused] = useState(false);
-  const [isMobileView, setIsMobileView] = useState(false);
-  useEffect(() => {
-    const check = () => setIsMobileView(window.innerWidth < 500);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
 
   function logUsage(label: string, start: number) {
     const seconds = Math.round((Date.now() - start) / 1000);
@@ -357,22 +338,32 @@ export default function TVApp() {
     d ? new Date(d).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" }) : "";
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", width: "100%", maxWidth: "100%", overflow: "hidden", fontFamily: "monospace", fontSize: 12, background: (activeChannel as any).crt ? "transparent" : "#0a0a0a", color: "#fff" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", fontFamily: "monospace", fontSize: 12, background: (activeChannel as any).crt ? "transparent" : "#0a0a0a", color: "#fff" }}>
 
       {/* Channel bar */}
-      <div style={{ display: "flex", alignItems: "center", borderBottom: "1px solid #333", flexShrink: 0, overflowX: "auto", overflowY: "hidden" }}>
-        {CHANNELS.map(ch => (
-          <button key={ch.id} onClick={() => setActiveChannel(ch)} style={{
-            background: activeChannel.id === ch.id ? "#fff" : "transparent",
-            color: activeChannel.id === ch.id ? "#000" : "#888",
-            border: "none", padding: "6px 12px",
-            cursor: "pointer", fontFamily: "monospace",
-            fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", flexShrink: 0, whiteSpace: "nowrap",
-          }}>{ch.label}</button>
-        ))}
-        <div style={{ flex: 1, minWidth: 8 }} />
-        <button onClick={() => setMode("tv")} style={{ background: mode === "tv" ? "#fff" : "transparent", color: mode === "tv" ? "#000" : "#888", border: "none", padding: "6px 10px", cursor: "pointer", fontFamily: "monospace", fontSize: 10, fontWeight: 700, flexShrink: 0 }}>▶</button>
-        <button onClick={() => setMode("rss")} style={{ background: mode === "rss" ? "#fff" : "transparent", color: mode === "rss" ? "#000" : "#888", border: "none", padding: "6px 10px", cursor: "pointer", fontFamily: "monospace", fontSize: 10, fontWeight: 700, flexShrink: 0 }}>≡</button>
+      <div style={{ display: "flex", alignItems: "center", borderBottom: "1px solid #333", flexShrink: 0, overflowX: "auto", scrollbarWidth: "none" }}>
+        {/* Desktop: buttons. Mobile: select dropdown */}
+        <style>{`@media (max-width: 639px) { .tv-ch-btns { display: none !important; } .tv-ch-select { display: block !important; } } @media (min-width: 640px) { .tv-ch-btns { display: flex !important; } .tv-ch-select { display: none !important; } }`}</style>
+        <div className="tv-ch-btns" style={{ display: "flex" }}>
+          {CHANNELS.map(ch => (
+            <button key={ch.id} onClick={() => setActiveChannel(ch)} style={{
+              background: activeChannel.id === ch.id ? "#fff" : "transparent",
+              color: activeChannel.id === ch.id ? "#000" : "#888",
+              border: "none", padding: "10px 16px",
+              cursor: "pointer", fontFamily: "monospace", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em",
+            }}>{ch.label}</button>
+          ))}
+        </div>
+        <select className="tv-ch-select"
+          value={activeChannel.id}
+          onChange={e => setActiveChannel(CHANNELS.find(c => c.id === e.target.value) ?? CHANNELS[0])}
+          style={{ display: "none", background: "#1a1a1a", color: "#fff", border: "none", padding: "10px 12px", fontFamily: "monospace", fontSize: 11, fontWeight: 700, cursor: "pointer" }}
+        >
+          {CHANNELS.map(ch => <option key={ch.id} value={ch.id}>{ch.label}</option>)}
+        </select>
+        <div style={{ flex: 1 }} />
+        <button onClick={() => setMode("tv")} style={{ background: mode === "tv" ? "#fff" : "transparent", color: mode === "tv" ? "#000" : "#888", border: "none", padding: "10px 14px", cursor: "pointer", fontFamily: "monospace", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>▶ TV</button>
+        <button onClick={() => setMode("rss")} style={{ background: mode === "rss" ? "#fff" : "transparent", color: mode === "rss" ? "#000" : "#888", border: "none", padding: "10px 14px", cursor: "pointer", fontFamily: "monospace", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>≡ FEED</button>
       </div>
 
       {loading ? (
@@ -389,11 +380,24 @@ export default function TVApp() {
             pointerEvents: mode === "tv" ? "auto" : "none",
           }}>
           {/* Video */}
-          <div style={{ flex: 1, background: "#000", position: "relative" }}>
+          <div style={{ flex: 1, background: (activeChannel as any).crt ? "transparent" : "#000", position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={(activeChannel as any).crt ? {
+              aspectRatio: "4/3",
+              height: "100%",
+              maxWidth: "100%",
+              position: "relative",
+              overflow: "hidden",
+            } : { position: "absolute", inset: 0 }}>
             {current && <YouTubeFallback video={current} onEnded={advanceOnce} startAt={(activeChannel as any).startAt ?? 0} playerRefOut={ytPlayerRef} />}
+            {/* CRT overlay for retro channel */}
             {(activeChannel as any).crt && (
-              <div style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 10, background: "repeating-linear-gradient(0deg, transparent 0px, transparent 3px, rgba(0,0,0,0.2) 3px, rgba(0,0,0,0.2) 4px)" }} />
+              <div style={{
+                position: "absolute", inset: 0, pointerEvents: "none", zIndex: 10,
+                background: "repeating-linear-gradient(0deg, transparent 0px, transparent 3px, rgba(0,0,0,0.25) 3px, rgba(0,0,0,0.25) 4px)",
+                mixBlendMode: "multiply",
+              }} />
             )}
+            </div>
           </div>
           {/* Info bar — bigger for TV */}
           <div style={{ padding: "12px 16px", background: "#111", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0, gap: 16 }}>
