@@ -22,6 +22,7 @@ import TVApp from "@/components/ui/TVApp";
 import StickyLayer, { addStickyRef } from "@/components/ui/StickyLayer";
 import { WALLPAPER_STYLES, STORAGE_KEY, THEME_KEY, type WallpaperKey, type ThemeKey } from "@/components/ui/SettingsApp";
 import NewsTicker from "@/components/ui/NewsTicker";
+import WikiApp from "@/components/ui/WikiApp";
 import TVLayout from "@/components/ui/TVLayout";
 
 /* ─────────────────────────────────────────────────────────────
@@ -58,6 +59,7 @@ const APP_ICONS = [
   { id: "terminal",   icon: "💻", label: "Terminal" },
   { id: "calculator", icon: "🧮", label: "Calc" },
   { id: "stats",      icon: "📊", label: "Stats" },
+  { id: "wiki",       icon: "Ⓦ", label: "Wiki" },
   { id: "rss",        icon: "📡", label: "RSS" },
   { id: "podcasts",   icon: "🎙️", label: "Podcasts" },
   { id: "radio",      icon: "📻", label: "Radio" },
@@ -167,6 +169,15 @@ function makeWindows(vw: number): WindowState[] {
       position: mobile ? { x: 8, y: 60 } : { x: 200, y: 80 },
       width: W ?? 620,
       height: 480,
+    },
+    {
+      id: "wiki",
+      title: "Wiki",
+      icon: "Ⓦ",
+      open: false, minimized: false, focused: false, zIndex: 1,
+      position: mobile ? { x: 8, y: 60 } : { x: 200, y: 80 },
+      width: W ?? 560,
+      height: 520,
     },
     {
       id: "rss",
@@ -351,6 +362,7 @@ function WindowContent({ id, onOpenWindow }: { id: string; onOpenWindow: (id: st
     case "stats":       return <StatsApp />;
     case "alarms":      return <AlarmApp />;
     case "rss":         return <RSSApp />;
+    case "wiki":        return <WikiApp />;
     case "calendar":    return <CalendarApp />;
     case "podcasts":    return <PodcastApp />;
     case "radio":       return <RadioApp />;
