@@ -348,21 +348,28 @@ export default function TVApp() {
     <div style={{ display: "flex", flexDirection: "column", height: "100%", width: "100%", maxWidth: "100%", overflow: "hidden", fontFamily: "monospace", fontSize: 12, background: (activeChannel as any).crt ? "transparent" : "#0a0a0a", color: "#fff" }}>
 
       {/* Channel bar */}
-      <div style={{ display: "flex", alignItems: "center", borderBottom: "1px solid #333", flexShrink: 0, overflow: "hidden" }}>
-        <div style={{ display: "flex", overflowX: "auto", scrollbarWidth: "none", flexShrink: 1, minWidth: 0 }}>
-          {CHANNELS.map(ch => (
-            <button key={ch.id} onClick={() => setActiveChannel(ch)} style={{
-              background: activeChannel.id === ch.id ? "#fff" : "transparent",
-              color: activeChannel.id === ch.id ? "#000" : "#888",
-              border: "none", padding: "10px 12px",
-              cursor: "pointer", fontFamily: "monospace", fontSize: 10, fontWeight: 700,
-              whiteSpace: "nowrap", flexShrink: 0,
-            }}>{ch.label}</button>
-          ))}
-        </div>
+      <div style={{ display: "flex", alignItems: "center", borderBottom: "1px solid #333", flexShrink: 0, minWidth: 0, overflow: "hidden" }}>
+        {isMobileView ? (
+          <select value={activeChannel.id}
+            onChange={e => setActiveChannel(CHANNELS.find(c => c.id === e.target.value) ?? CHANNELS[0])}
+            style={{ background: "#111", color: "#fff", border: "none", padding: "8px 10px", fontFamily: "monospace", fontSize: 11, fontWeight: 700, cursor: "pointer", flexShrink: 1, minWidth: 0, maxWidth: "50%" }}>
+            {CHANNELS.map(ch => <option key={ch.id} value={ch.id}>{ch.label}</option>)}
+          </select>
+        ) : (
+          <>
+            {CHANNELS.map(ch => (
+              <button key={ch.id} onClick={() => setActiveChannel(ch)} style={{
+                background: activeChannel.id === ch.id ? "#fff" : "transparent",
+                color: activeChannel.id === ch.id ? "#000" : "#888",
+                border: "none", padding: "10px 12px",
+                cursor: "pointer", fontFamily: "monospace", fontSize: 10, fontWeight: 700, whiteSpace: "nowrap",
+              }}>{ch.label}</button>
+            ))}
+          </>
+        )}
         <div style={{ flex: 1 }} />
-        <button onClick={() => setMode("tv")} style={{ background: mode === "tv" ? "#fff" : "transparent", color: mode === "tv" ? "#000" : "#888", border: "none", padding: "10px 14px", cursor: "pointer", fontFamily: "monospace", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>▶ TV</button>
-        <button onClick={() => setMode("rss")} style={{ background: mode === "rss" ? "#fff" : "transparent", color: mode === "rss" ? "#000" : "#888", border: "none", padding: "10px 14px", cursor: "pointer", fontFamily: "monospace", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>≡ FEED</button>
+        <button onClick={() => setMode("tv")} style={{ background: mode === "tv" ? "#fff" : "transparent", color: mode === "tv" ? "#000" : "#888", border: "none", padding: "10px 12px", cursor: "pointer", fontFamily: "monospace", fontSize: 10, fontWeight: 700, flexShrink: 0 }}>▶ TV</button>
+        <button onClick={() => setMode("rss")} style={{ background: mode === "rss" ? "#fff" : "transparent", color: mode === "rss" ? "#000" : "#888", border: "none", padding: "10px 12px", cursor: "pointer", fontFamily: "monospace", fontSize: 10, fontWeight: 700, flexShrink: 0 }}>≡ FEED</button>
       </div>
 
       {loading ? (
