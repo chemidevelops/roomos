@@ -105,6 +105,7 @@ type YouTubeNamespace = {
       events: {
         onReady: (event: { target: YouTubePlayerInstance }) => void;
         onStateChange: (event: { data: number }) => void;
+        onError?: (event: { data: number }) => void;
       };
     },
   ) => YouTubePlayerInstance;
