@@ -378,6 +378,7 @@ export default function TVApp() {
                 mixBlendMode: "multiply",
               }} />
             )}
+            </div>
           </div>
           {/* Info bar — bigger for TV */}
           <div style={{ padding: "12px 16px", background: "#111", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0, gap: 16 }}>
