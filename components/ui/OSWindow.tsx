@@ -21,6 +21,7 @@ export interface OSWindowProps {
 }
 
 export default function OSWindow({
+  id,
   title,
   icon,
   children,
