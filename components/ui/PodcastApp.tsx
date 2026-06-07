@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 
 const DEFAULT_FEEDS = [
-  { name: "Mesón Sol", url: "https://feeds.acast.com/public/shows/meson-sol" },
+  { name: "Mesón Sol",               url: "https://feeds.acast.com/public/shows/meson-sol" },
+  { name: "Defensores de la Galaxia", url: "https://feeds.ivoox.com/feed_fg_f11830068_filtro_1.xml" },
 ];
 
 interface Episode {
