@@ -2,10 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
   const channelId = req.nextUrl.searchParams.get("channelId");
-  if (!channelId) return NextResponse.json({ error: "Missing channelId" }, { status: 400 });
+  const playlistId = req.nextUrl.searchParams.get("playlistId");
+  if (!channelId && !playlistId) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+
+  const feedUrl = playlistId
+    ? `https://www.youtube.com/feeds/videos.xml?playlist_id=${playlistId}`
+    : `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
 
   const res = await fetch(
-    `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`,
+    feedUrl,
     { next: { revalidate: 3600 } }
   );
   if (!res.ok) return NextResponse.json({ videos: [] });

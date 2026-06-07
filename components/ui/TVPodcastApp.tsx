@@ -2,7 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 
-const FEEDS = [{ name: "Mesón Sol", url: "https://feeds.acast.com/public/shows/meson-sol" }];
+const FEEDS = [
+  { name: "Mesón Sol",             url: "https://feeds.acast.com/public/shows/meson-sol" },
+  { name: "Defensores de la Galaxia", url: "https://feeds.ivoox.com/feed_fg_f11830068_filtro_1.xml" },
+];
 
 interface Episode { title: string; description: string; pubDate: string; duration: string; audioUrl: string; guid: string; }
 interface Feed { title: string; image: string; episodes: Episode[]; }
@@ -23,6 +26,7 @@ function fmtTime(s: number) {
 }
 
 export default function TVPodcastApp() {
+  const [activeFeed, setActiveFeed] = useState(0);
   const [feedData, setFeedData] = useState<Feed | null>(null);
   const [selected, setSelected] = useState<Episode | null>(null);
   const [playing, setPlaying] = useState(false);
@@ -31,8 +35,9 @@ export default function TVPodcastApp() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    fetch(`/api/podcast?url=${encodeURIComponent(FEEDS[0].url)}`).then(r => r.json()).then(setFeedData).catch(() => {});
-  }, []);
+    setFeedData(null);
+    fetch(`/api/podcast?url=${encodeURIComponent(FEEDS[activeFeed].url)}`).then(r => r.json()).then(setFeedData).catch(() => {});
+  }, [activeFeed]);
 
   function playEpisode(ep: Episode) {
     if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ""; }
@@ -79,6 +84,18 @@ export default function TVPodcastApp() {
           </div>
         </div>
       )}
+
+      {/* Feed selector */}
+      <div style={{ display: "flex", gap: 0, borderBottom: "1px solid #1a1a1a", flexShrink: 0 }}>
+        {FEEDS.map((f, i) => (
+          <button key={i} onClick={() => { setActiveFeed(i); setSelected(null); }} style={{
+            background: activeFeed === i ? "#fff" : "transparent",
+            color: activeFeed === i ? "#000" : "#666",
+            border: "none", padding: "12px 24px",
+            cursor: "pointer", fontFamily: "system-ui", fontSize: 15, fontWeight: 700,
+          }}>{f.name}</button>
+        ))}
+      </div>
 
       {/* Episode list */}
       <div style={{ flex: 1, overflowY: "auto", padding: "16px 48px" }}>

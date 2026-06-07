@@ -55,6 +55,17 @@ const CHANNELS = [
     queries: LIVE_MUSIC_ARTISTS,
     sources: [],
   },
+  {
+    id: "retro",
+    label: "RETRO",
+    type: "playlist" as const,
+    playlists: [
+      "PLg9cBZGseLNsV5NTxxFuaSwjZuDGUwo0T",
+      "PLH4SfqNVbXjNDUq-XgO9NTBUwN_cOzw4T",
+    ],
+    sources: [],
+    crt: true,
+  },
 ];
 
 interface Video {
@@ -226,6 +237,25 @@ export default function TVApp() {
       return;
     }
 
+    if (activeChannel.type === "playlist") {
+      Promise.all(
+        (activeChannel.playlists ?? []).map(pid =>
+          fetch(`/api/youtube?playlistId=${pid}`)
+            .then(r => r.json())
+            .then(d => d.videos as Video[])
+            .catch(() => [] as Video[])
+        )
+      ).then(results => {
+        const all = shuffle(results.flat());
+        setRssVideos(all);
+        setVideos(all);
+        setQueue(all);
+        setCurrent(all[0] ?? null);
+        setLoading(false);
+      });
+      return;
+    }
+
     Promise.all(
       activeChannel.sources.map(source =>
         fetch(`/api/youtube?channelId=${source.id}`)
@@ -297,24 +327,23 @@ export default function TVApp() {
           <button key={ch.id} onClick={() => setActiveChannel(ch)} style={{
             background: activeChannel.id === ch.id ? "#fff" : "transparent",
             color: activeChannel.id === ch.id ? "#000" : "#888",
-            border: "none", padding: "6px 14px",
+            border: "none", padding: "10px 18px",
             cursor: "pointer", fontFamily: "monospace",
-            fontSize: 10, fontWeight: 700, letterSpacing: "0.15em",
+            fontSize: 12, fontWeight: 700, letterSpacing: "0.12em",
           }}>{ch.label}</button>
         ))}
         <div style={{ flex: 1 }} />
-        {/* Mode toggle */}
         <button onClick={() => setMode("tv")} style={{
           background: mode === "tv" ? "#fff" : "transparent",
           color: mode === "tv" ? "#000" : "#888",
-          border: "none", padding: "6px 12px",
-          cursor: "pointer", fontFamily: "monospace", fontSize: 10, fontWeight: 700,
+          border: "none", padding: "10px 16px",
+          cursor: "pointer", fontFamily: "monospace", fontSize: 12, fontWeight: 700,
         }}>▶ TV</button>
         <button onClick={() => setMode("rss")} style={{
           background: mode === "rss" ? "#fff" : "transparent",
           color: mode === "rss" ? "#000" : "#888",
-          border: "none", padding: "6px 12px",
-          cursor: "pointer", fontFamily: "monospace", fontSize: 10, fontWeight: 700,
+          border: "none", padding: "10px 16px",
+          cursor: "pointer", fontFamily: "monospace", fontSize: 12, fontWeight: 700,
         }}>≡ FEED</button>
       </div>
 
@@ -333,28 +362,31 @@ export default function TVApp() {
           }}>
           {/* Video */}
           <div style={{ flex: 1, background: "#000", position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            {current && (
-              <YouTubeFallback
-                video={current}
-                onEnded={advanceOnce}
-              />
+            {current && <YouTubeFallback video={current} onEnded={advanceOnce} />}
+            {/* CRT overlay for retro channel */}
+            {(activeChannel as any).crt && (
+              <div style={{
+                position: "absolute", inset: 0, pointerEvents: "none", zIndex: 10,
+                background: "repeating-linear-gradient(0deg, transparent 0px, transparent 3px, rgba(0,0,0,0.25) 3px, rgba(0,0,0,0.25) 4px)",
+                mixBlendMode: "multiply",
+              }} />
             )}
           </div>
-          {/* Info bar */}
-          <div style={{ padding: "8px 12px", background: "#111", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
+          {/* Info bar — bigger for TV */}
+          <div style={{ padding: "12px 16px", background: "#111", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0, gap: 16 }}>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, lineHeight: 1.3, color: "#fff", flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                 {current?.title}
               </div>
-              <div style={{ fontSize: 9, color: "#666", marginTop: 2 }}>
-                {current?.channelName} · {current ? formatDate(current.published) : ""}
+              <div style={{ fontSize: 11, color: "#666", marginTop: 3 }}>
+                {current?.channelName} {current?.published ? `· ${formatDate(current.published)}` : ""}
               </div>
             </div>
             <button onClick={next} style={{
-              background: "transparent", border: "1px solid #444",
-              color: "#fff", padding: "4px 10px", cursor: "pointer",
-              fontFamily: "monospace", fontSize: 10, flexShrink: 0, marginLeft: 12,
-            }}>⏭ NEXT</button>
+              background: "#222", border: "1px solid #444",
+              color: "#fff", padding: "10px 20px", cursor: "pointer",
+              fontFamily: "monospace", fontSize: 14, fontWeight: 700, flexShrink: 0,
+            }}>⏭ SIGUIENTE</button>
           </div>
         </div>
 
