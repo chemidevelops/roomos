@@ -162,8 +162,6 @@ function YouTubeFallback({ video, onEnded, startAt = 0, onError, playerRefOut }:
       if (cancelled || !containerRef.current) return;
       playerRef.current = new YT.Player(containerRef.current, {
         videoId: videoIdRef.current,
-        width: "100%",
-        height: "100%",
         playerVars: { autoplay: 1, controls: 1, playsinline: 1, rel: 0, start: startAt },
         events: {
           onReady: event => {
@@ -195,8 +193,7 @@ function YouTubeFallback({ video, onEnded, startAt = 0, onError, playerRefOut }:
 
   return (
     <>
-      <style>{`#tv-player-wrap, #tv-player-wrap > div, #tv-player-wrap iframe { width: 100% !important; height: 100% !important; position: absolute !important; top: 0 !important; left: 0 !important; }`}</style>
-      <div id="tv-player-wrap" ref={containerRef} style={{ width: "100%", height: "100%", position: "relative", overflow: "hidden" }} />
+      <div ref={containerRef} style={{ width: "100%", height: "100%" }} />
     </>
   );
 }
@@ -393,7 +390,7 @@ export default function TVApp() {
             pointerEvents: mode === "tv" ? "auto" : "none",
           }}>
           {/* Video */}
-          <div style={{ flex: 1, position: "relative", overflow: "hidden", minWidth: 0, background: "#000" }}>
+          <div style={{ flex: 1, background: "#000", position: "relative" }}>
             {current && <YouTubeFallback video={current} onEnded={advanceOnce} startAt={(activeChannel as any).startAt ?? 0} playerRefOut={ytPlayerRef} />}
             {(activeChannel as any).crt && (
               <div style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 10, background: "repeating-linear-gradient(0deg, transparent 0px, transparent 3px, rgba(0,0,0,0.2) 3px, rgba(0,0,0,0.2) 4px)" }} />
