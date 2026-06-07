@@ -2,10 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 
-const FEEDS = [
-  { name: "Mesón Sol",             url: "https://feeds.acast.com/public/shows/meson-sol" },
-  { name: "Defensores de la Galaxia", url: "https://feeds.ivoox.com/feed_fg_f11830068_filtro_1.xml" },
-];
+import { PODCAST_FEEDS as FEEDS } from "@/lib/feeds";
 
 interface Episode { title: string; description: string; pubDate: string; duration: string; audioUrl: string; guid: string; }
 interface Feed { title: string; image: string; episodes: Episode[]; }

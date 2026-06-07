@@ -10,10 +10,7 @@ interface FeedItem {
   feed: string;
 }
 
-const FEEDS = [
-  { name: "Applesfera", url: "https://www.applesfera.com/feedburner.xml" },
-  { name: "Vida Extra", url: "https://www.vidaextra.com/feedburner.xml" },
-];
+import { RSS_FEEDS as FEEDS } from "@/lib/feeds";
 
 const scrollbar: React.CSSProperties = { overflowY: "auto", scrollbarWidth: "thin" };
 
