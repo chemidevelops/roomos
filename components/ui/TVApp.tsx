@@ -386,25 +386,11 @@ export default function TVApp() {
             pointerEvents: mode === "tv" ? "auto" : "none",
           }}>
           {/* Video */}
-          <div style={{ flex: 1, background: (activeChannel as any).crt ? "transparent" : "#000", position: "relative", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", minWidth: 0 }}>
-            <div style={(activeChannel as any).crt ? {
-              aspectRatio: "4/3",
-              maxHeight: "100%",
-              maxWidth: "100%",
-              position: "relative",
-              overflow: "hidden",
-              flexShrink: 1,
-            } : { position: "absolute", inset: 0 }}>
+          <div style={{ flex: 1, position: "relative", overflow: "hidden", minWidth: 0, background: "#000" }}>
             {current && <YouTubeFallback video={current} onEnded={advanceOnce} startAt={(activeChannel as any).startAt ?? 0} playerRefOut={ytPlayerRef} />}
-            {/* CRT overlay for retro channel */}
             {(activeChannel as any).crt && (
-              <div style={{
-                position: "absolute", inset: 0, pointerEvents: "none", zIndex: 10,
-                background: "repeating-linear-gradient(0deg, transparent 0px, transparent 3px, rgba(0,0,0,0.25) 3px, rgba(0,0,0,0.25) 4px)",
-                mixBlendMode: "multiply",
-              }} />
+              <div style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 10, background: "repeating-linear-gradient(0deg, transparent 0px, transparent 3px, rgba(0,0,0,0.2) 3px, rgba(0,0,0,0.2) 4px)" }} />
             )}
-            </div>
           </div>
           {/* Info bar — bigger for TV */}
           <div style={{ padding: "12px 16px", background: "#111", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0, gap: 16 }}>
