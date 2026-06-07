@@ -22,6 +22,7 @@ import TVApp from "@/components/ui/TVApp";
 import StickyLayer, { addStickyRef } from "@/components/ui/StickyLayer";
 import { WALLPAPER_STYLES, STORAGE_KEY, THEME_KEY, type WallpaperKey, type ThemeKey } from "@/components/ui/SettingsApp";
 import NewsTicker from "@/components/ui/NewsTicker";
+import TVLayout from "@/components/ui/TVLayout";
 
 /* ─────────────────────────────────────────────────────────────
    Types
@@ -645,5 +646,16 @@ function Desktop() {
    Page
 ───────────────────────────────────────────────────────────── */
 export default function Home() {
+  const [isMobile, setIsMobile] = useState(false);
+  const [isTV, setIsTV] = useState(false);
+  useEffect(() => {
+    const ua = navigator.userAgent;
+    const tv = /AppleTV|TV Safari|TVOS|tvOS/i.test(ua) || window.innerWidth >= 1920 && window.innerHeight >= 1080 && /Safari/.test(ua) && !/iPhone|iPad|Mac/.test(ua);
+    const mobile = !tv && window.innerWidth < 640;
+    setIsTV(tv);
+    setIsMobile(mobile);
+  }, []);
+  if (isTV) return <TVLayout />;
+  if (isMobile) return <MobileOS />;
   return <Desktop />;
 }
