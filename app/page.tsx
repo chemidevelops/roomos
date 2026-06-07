@@ -23,6 +23,7 @@ import StickyLayer, { addStickyRef } from "@/components/ui/StickyLayer";
 import { WALLPAPER_STYLES, STORAGE_KEY, THEME_KEY, type WallpaperKey, type ThemeKey } from "@/components/ui/SettingsApp";
 import NewsTicker from "@/components/ui/NewsTicker";
 import TVLayout from "@/components/ui/TVLayout";
+import MobileOS from "@/components/ui/MobileOS";
 
 /* ─────────────────────────────────────────────────────────────
    Types
