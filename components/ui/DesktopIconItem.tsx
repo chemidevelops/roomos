@@ -29,6 +29,7 @@ export default function DesktopIconItem({
       onDragEnd={(_, info) => onDragEnd(x + info.offset.x, y + info.offset.y)}
       onPointerDown={(e) => { e.stopPropagation(); onSelect(); }}
       onDoubleClick={(e) => { e.stopPropagation(); onDoubleClick(); }}
+      onClick={(e) => { if (typeof window !== "undefined" && /AppleTV|TV Safari/.test(navigator.userAgent)) { e.stopPropagation(); onDoubleClick(); } }}
       style={{
         position: "absolute",
         top: 0, left: 0,
