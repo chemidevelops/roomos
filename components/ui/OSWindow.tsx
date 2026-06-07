@@ -67,6 +67,7 @@ export default function OSWindow({
   return (
     <AnimatePresence>
       <motion.div
+        data-window-id={id}
         drag={!maximized}
         dragControls={dragControls}
         dragListener={false}

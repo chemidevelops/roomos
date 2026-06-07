@@ -524,11 +524,17 @@ function Desktop() {
     // Resize TV window to PiP when retro channel selected
     const onTVChannel = (e: Event) => {
       const { retro } = (e as CustomEvent).detail;
-      setWindows(prev => prev.map(w => w.id === "tv" ? {
-        ...w,
-        width: retro ? 480 : 640,
-        height: retro ? 360 : 420,
-      } : w));
+      const w = retro ? 480 : 640;
+      const h = retro ? 360 : 420;
+      // Update React state
+      setWindows(prev => prev.map(win => win.id === "tv" ? { ...win, width: w, height: h } : win));
+      // Also directly update DOM as fallback (framer-motion may not pick up style changes)
+      const tvEl = document.querySelector('[data-window-id="tv"]') as HTMLElement | null;
+      if (tvEl) {
+        tvEl.style.width = w + "px";
+        tvEl.style.height = h + "px";
+        tvEl.style.transition = "width 0.25s ease, height 0.25s ease";
+      }
     };
     window.addEventListener("roomos-tv-channel", onTVChannel);
 

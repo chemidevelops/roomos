@@ -348,27 +348,18 @@ export default function TVApp() {
     <div style={{ display: "flex", flexDirection: "column", height: "100%", width: "100%", maxWidth: "100%", overflow: "hidden", fontFamily: "monospace", fontSize: 12, background: (activeChannel as any).crt ? "transparent" : "#0a0a0a", color: "#fff" }}>
 
       {/* Channel bar */}
-      <div style={{ display: "flex", alignItems: "center", borderBottom: "1px solid #333", flexShrink: 0, minWidth: 0 }}>
-        {isMobileView ? (
-          <select
-            value={activeChannel.id}
-            onChange={e => setActiveChannel(CHANNELS.find(c => c.id === e.target.value) ?? CHANNELS[0])}
-            style={{ background: "#111", color: "#fff", border: "none", padding: "8px 10px", fontFamily: "monospace", fontSize: 11, fontWeight: 700, cursor: "pointer", flexShrink: 0, maxWidth: "40vw" }}
-          >
-            {CHANNELS.map(ch => <option key={ch.id} value={ch.id}>{ch.label}</option>)}
-          </select>
-        ) : (
-          <div style={{ display: "flex", overflow: "hidden" }}>
-            {CHANNELS.map(ch => (
-              <button key={ch.id} onClick={() => setActiveChannel(ch)} style={{
-                background: activeChannel.id === ch.id ? "#fff" : "transparent",
-                color: activeChannel.id === ch.id ? "#000" : "#888",
-                border: "none", padding: "10px 14px",
-                cursor: "pointer", fontFamily: "monospace", fontSize: 11, fontWeight: 700,
-              }}>{ch.label}</button>
-            ))}
-          </div>
-        )}
+      <div style={{ display: "flex", alignItems: "center", borderBottom: "1px solid #333", flexShrink: 0, overflow: "hidden" }}>
+        <div style={{ display: "flex", overflowX: "auto", scrollbarWidth: "none", flexShrink: 1, minWidth: 0 }}>
+          {CHANNELS.map(ch => (
+            <button key={ch.id} onClick={() => setActiveChannel(ch)} style={{
+              background: activeChannel.id === ch.id ? "#fff" : "transparent",
+              color: activeChannel.id === ch.id ? "#000" : "#888",
+              border: "none", padding: "10px 12px",
+              cursor: "pointer", fontFamily: "monospace", fontSize: 10, fontWeight: 700,
+              whiteSpace: "nowrap", flexShrink: 0,
+            }}>{ch.label}</button>
+          ))}
+        </div>
         <div style={{ flex: 1 }} />
         <button onClick={() => setMode("tv")} style={{ background: mode === "tv" ? "#fff" : "transparent", color: mode === "tv" ? "#000" : "#888", border: "none", padding: "10px 14px", cursor: "pointer", fontFamily: "monospace", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>▶ TV</button>
         <button onClick={() => setMode("rss")} style={{ background: mode === "rss" ? "#fff" : "transparent", color: mode === "rss" ? "#000" : "#888", border: "none", padding: "10px 14px", cursor: "pointer", fontFamily: "monospace", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>≡ FEED</button>
@@ -388,13 +379,14 @@ export default function TVApp() {
             pointerEvents: mode === "tv" ? "auto" : "none",
           }}>
           {/* Video */}
-          <div style={{ flex: 1, background: (activeChannel as any).crt ? "transparent" : "#000", position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ flex: 1, background: (activeChannel as any).crt ? "transparent" : "#000", position: "relative", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", minWidth: 0 }}>
             <div style={(activeChannel as any).crt ? {
               aspectRatio: "4/3",
-              height: "100%",
+              maxHeight: "100%",
               maxWidth: "100%",
               position: "relative",
               overflow: "hidden",
+              flexShrink: 1,
             } : { position: "absolute", inset: 0 }}>
             {current && <YouTubeFallback video={current} onEnded={advanceOnce} startAt={(activeChannel as any).startAt ?? 0} playerRefOut={ytPlayerRef} />}
             {/* CRT overlay for retro channel */}
