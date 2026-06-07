@@ -101,6 +101,8 @@ type YouTubeNamespace = {
     element: HTMLDivElement,
     options: {
       videoId: string;
+      width?: string | number;
+      height?: string | number;
       playerVars: Record<string, number>;
       events: {
         onReady: (event: { target: YouTubePlayerInstance }) => void;
@@ -160,6 +162,8 @@ function YouTubeFallback({ video, onEnded, startAt = 0, onError, playerRefOut }:
       if (cancelled || !containerRef.current) return;
       playerRef.current = new YT.Player(containerRef.current, {
         videoId: videoIdRef.current,
+        width: "100%",
+        height: "100%",
         playerVars: { autoplay: 1, controls: 1, playsinline: 1, rel: 0, start: startAt },
         events: {
           onReady: event => {
