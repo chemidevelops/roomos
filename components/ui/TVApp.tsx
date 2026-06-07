@@ -167,6 +167,12 @@ function YouTubeFallback({ video, onEnded, startAt = 0, onError, playerRefOut }:
           onReady: event => {
             readyRef.current = true;
             if (playerRefOut) playerRefOut.current = event.target;
+            // Force iframe to fill container (YouTube sets inline px dimensions)
+            const iframe = containerRef.current?.querySelector("iframe");
+            if (iframe) {
+              iframe.style.width = "100%";
+              iframe.style.height = "100%";
+            }
             if (isMobile) event.target.mute();
             event.target.playVideo();
           },
