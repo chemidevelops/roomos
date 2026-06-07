@@ -37,6 +37,7 @@ const CHANNELS = [
       { id: "UC-Y4Z-8quogo45x8vY2V8Aw", name: "Perspectivas Pixeladas" },
       { id: "UCiqwLswhzwJZeWwfocewNbg", name: "hazylevels" },
       { id: "UC0fDG3byEcMtbOqPMymDNbw", name: "/noclip" },
+      { id: "UCcaesp6l2FQFdcw5e-Pzgtg", name: "Marc Rollan" },
     ],
   },
   {
@@ -104,6 +105,7 @@ type YouTubeNamespace = {
       events: {
         onReady: (event: { target: YouTubePlayerInstance }) => void;
         onStateChange: (event: { data: number }) => void;
+        onError?: (event: { data: number }) => void;
       };
     },
   ) => YouTubePlayerInstance;
@@ -169,6 +171,11 @@ function YouTubeFallback({ video, onEnded }: { video: Video; onEnded: () => void
           },
           onStateChange: event => {
             if (event.data === YT.PlayerState.ENDED) onEndedRef.current();
+          },
+          onError: (event: { data: number }) => {
+            if ([100, 101, 150].includes(event.data)) {
+              setTimeout(() => onEndedRef.current(), 500);
+            }
           },
         },
       });
@@ -322,14 +329,15 @@ export default function TVApp() {
     <div style={{ display: "flex", flexDirection: "column", height: "100%", fontFamily: "monospace", fontSize: 12, background: "#0a0a0a", color: "#fff" }}>
 
       {/* Channel bar */}
-      <div style={{ display: "flex", alignItems: "center", gap: 0, borderBottom: "1px solid #333", flexShrink: 0 }}>
+      <div style={{ display: "flex", alignItems: "stretch", gap: 0, borderBottom: "1px solid #333", flexShrink: 0 }}>
         {CHANNELS.map(ch => (
           <button key={ch.id} onClick={() => setActiveChannel(ch)} style={{
             background: activeChannel.id === ch.id ? "#fff" : "transparent",
             color: activeChannel.id === ch.id ? "#000" : "#888",
-            border: "none", padding: "10px 18px",
+            border: "none", padding: "10px 14px",
             cursor: "pointer", fontFamily: "monospace",
-            fontSize: 12, fontWeight: 700, letterSpacing: "0.12em",
+            fontSize: 11, fontWeight: 700, letterSpacing: "0.08em",
+            display: "flex", alignItems: "center",
           }}>{ch.label}</button>
         ))}
         <div style={{ flex: 1 }} />
