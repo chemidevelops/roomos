@@ -332,9 +332,11 @@ export default function TVApp() {
       <div style={{ display: "flex", alignItems: "stretch", gap: 0, borderBottom: "1px solid #333", flexShrink: 0 }}>
         {CHANNELS.map(ch => (
           <button key={ch.id} onClick={() => setActiveChannel(ch)} style={{
-            background: activeChannel.id === ch.id ? "#fff" : "transparent",
-            color: activeChannel.id === ch.id ? "#000" : "#888",
-            border: "none", padding: "10px 14px",
+            background: "transparent",
+            color: activeChannel.id === ch.id ? "#fff" : "#888",
+            border: "none",
+            borderBottom: activeChannel.id === ch.id ? "2px solid #fff" : "2px solid transparent",
+            padding: "10px 14px",
             cursor: "pointer", fontFamily: "monospace",
             fontSize: 11, fontWeight: 700, letterSpacing: "0.08em",
             display: "flex", alignItems: "center",
