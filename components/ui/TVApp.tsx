@@ -139,7 +139,7 @@ function loadYouTubeApi(): Promise<YouTubeNamespace> {
   return youtubeApiPromise;
 }
 
-function YouTubeFallback({ video, onEnded, startAt = 0, onError }: { video: Video; onEnded: () => void; startAt?: number; onError?: () => void }) {
+function YouTubeFallback({ video, onEnded, startAt = 0, onError, playerRefOut }: { video: Video; onEnded: () => void; startAt?: number; onError?: () => void; playerRefOut?: React.MutableRefObject<YouTubePlayerInstance | null> }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<YouTubePlayerInstance | null>(null);
   const onEndedRef = useRef(onEnded);
@@ -164,9 +164,8 @@ function YouTubeFallback({ video, onEnded, startAt = 0, onError }: { video: Vide
         events: {
           onReady: event => {
             readyRef.current = true;
-            if (isMobile) {
-              event.target.mute();
-            }
+            if (playerRefOut) playerRefOut.current = event.target;
+            if (isMobile) event.target.mute();
             event.target.playVideo();
           },
           onStateChange: event => {
@@ -207,6 +206,8 @@ export default function TVApp() {
   const videosRef = useRef<Video[]>([]);
   const queueRef = useRef<Video[]>([]);
   const nextCalledRef = useRef(false);
+  const ytPlayerRef = useRef<YouTubePlayerInstance | null>(null);
+  const [ytPaused, setYtPaused] = useState(false);
 
   function logUsage(label: string, start: number) {
     const seconds = Math.round((Date.now() - start) / 1000);
@@ -390,7 +391,7 @@ export default function TVApp() {
               position: "relative",
               overflow: "hidden",
             } : { position: "absolute", inset: 0 }}>
-            {current && <YouTubeFallback video={current} onEnded={advanceOnce} startAt={(activeChannel as any).startAt ?? 0} />}
+            {current && <YouTubeFallback video={current} onEnded={advanceOnce} startAt={(activeChannel as any).startAt ?? 0} playerRefOut={ytPlayerRef} />}
             {/* CRT overlay for retro channel */}
             {(activeChannel as any).crt && (
               <div style={{
@@ -411,11 +412,20 @@ export default function TVApp() {
                 {current?.channelName} {current?.published ? `· ${formatDate(current.published)}` : ""}
               </div>
             </div>
-            <button onClick={next} style={{
-              background: "#222", border: "1px solid #444",
-              color: "#fff", padding: "10px 20px", cursor: "pointer",
-              fontFamily: "monospace", fontSize: 14, fontWeight: 700, flexShrink: 0,
-            }}>⏭ SIGUIENTE</button>
+            <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+              <button onClick={() => {
+                if (!ytPlayerRef.current) return;
+                if (ytPaused) { ytPlayerRef.current.playVideo(); setYtPaused(false); }
+                else { (ytPlayerRef.current as any).pauseVideo?.(); setYtPaused(true); }
+              }} style={{
+                background: "#222", border: "1px solid #444", color: "#fff",
+                padding: "10px 16px", cursor: "pointer", fontFamily: "monospace", fontSize: 14,
+              }}>{ytPaused ? "▶" : "⏸"}</button>
+              <button onClick={next} style={{
+                background: "#222", border: "1px solid #444", color: "#fff",
+                padding: "10px 20px", cursor: "pointer", fontFamily: "monospace", fontSize: 14, fontWeight: 700,
+              }}>⏭</button>
+            </div>
           </div>
         </div>
 
