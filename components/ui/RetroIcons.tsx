@@ -50,6 +50,7 @@ export const RETRO_ICON_URLS: Record<string, string> = {
   podcasts:   `${BASE}/multimedia-audio-player.png`,
   radio:      `${BASE}/gnome-audio.png`,
   tv:         `${BASE}/multimedia-video-player.png`,
+  wiki:       `${BASE}/browser-help.png`,
 };
 
 export function RetroIcon({ id, size = 40 }: { id: string; size?: number }) {
