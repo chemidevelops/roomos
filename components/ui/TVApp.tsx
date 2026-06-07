@@ -138,7 +138,7 @@ function loadYouTubeApi(): Promise<YouTubeNamespace> {
   return youtubeApiPromise;
 }
 
-function YouTubeFallback({ video, onEnded, startAt = 0 }: { video: Video; onEnded: () => void; startAt?: number }) {
+function YouTubeFallback({ video, onEnded, startAt = 0, onError }: { video: Video; onEnded: () => void; startAt?: number; onError?: () => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<YouTubePlayerInstance | null>(null);
   const onEndedRef = useRef(onEnded);
@@ -170,6 +170,12 @@ function YouTubeFallback({ video, onEnded, startAt = 0 }: { video: Video; onEnde
           },
           onStateChange: event => {
             if (event.data === YT.PlayerState.ENDED) onEndedRef.current();
+          },
+          onError: (event: { data: number }) => {
+            // 101/150 = embedding not allowed, 100 = video not found → skip
+            if ([100, 101, 150].includes(event.data)) {
+              setTimeout(() => onEndedRef.current(), 500);
+            }
           },
         },
       });
@@ -333,28 +339,31 @@ export default function TVApp() {
     <div style={{ display: "flex", flexDirection: "column", height: "100%", fontFamily: "monospace", fontSize: 12, background: (activeChannel as any).crt ? "transparent" : "#0a0a0a", color: "#fff" }}>
 
       {/* Channel bar */}
-      <div style={{ display: "flex", alignItems: "center", gap: 0, borderBottom: "1px solid #333", flexShrink: 0 }}>
-        {CHANNELS.map(ch => (
-          <button key={ch.id} onClick={() => setActiveChannel(ch)} style={{
-            background: activeChannel.id === ch.id ? "#fff" : "transparent",
-            color: activeChannel.id === ch.id ? "#000" : "#888",
-            border: "none", padding: "10px 18px",
-            cursor: "pointer", fontFamily: "monospace",
-            fontSize: 12, fontWeight: 700, letterSpacing: "0.12em",
-          }}>{ch.label}</button>
-        ))}
+      <div style={{ display: "flex", alignItems: "center", borderBottom: "1px solid #333", flexShrink: 0, overflowX: "auto", scrollbarWidth: "none" }}>
+        <select
+          value={activeChannel.id}
+          onChange={e => setActiveChannel(CHANNELS.find(c => c.id === e.target.value) ?? CHANNELS[0])}
+          style={{
+            background: "#1a1a1a", color: "#fff", border: "none",
+            padding: "10px 12px", fontFamily: "monospace", fontSize: 11,
+            fontWeight: 700, cursor: "pointer", flexShrink: 0,
+            appearance: "none", WebkitAppearance: "none",
+          }}
+        >
+          {CHANNELS.map(ch => <option key={ch.id} value={ch.id}>{ch.label}</option>)}
+        </select>
         <div style={{ flex: 1 }} />
         <button onClick={() => setMode("tv")} style={{
           background: mode === "tv" ? "#fff" : "transparent",
           color: mode === "tv" ? "#000" : "#888",
-          border: "none", padding: "10px 16px",
-          cursor: "pointer", fontFamily: "monospace", fontSize: 12, fontWeight: 700,
+          border: "none", padding: "10px 14px",
+          cursor: "pointer", fontFamily: "monospace", fontSize: 11, fontWeight: 700, flexShrink: 0,
         }}>▶ TV</button>
         <button onClick={() => setMode("rss")} style={{
           background: mode === "rss" ? "#fff" : "transparent",
           color: mode === "rss" ? "#000" : "#888",
-          border: "none", padding: "10px 16px",
-          cursor: "pointer", fontFamily: "monospace", fontSize: 12, fontWeight: 700,
+          border: "none", padding: "10px 14px",
+          cursor: "pointer", fontFamily: "monospace", fontSize: 11, fontWeight: 700, flexShrink: 0,
         }}>≡ FEED</button>
       </div>
 
