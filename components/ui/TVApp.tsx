@@ -55,6 +55,17 @@ const CHANNELS = [
     queries: LIVE_MUSIC_ARTISTS,
     sources: [],
   },
+  {
+    id: "retro",
+    label: "RETRO",
+    type: "playlist" as const,
+    playlists: [
+      "PLg9cBZGseLNsV5NTxxFuaSwjZuDGUwo0T",
+      "PLH4SfqNVbXjNDUq-XgO9NTBUwN_cOzw4T",
+    ],
+    sources: [],
+    crt: true,
+  },
 ];
 
 interface Video {
@@ -93,7 +104,6 @@ type YouTubeNamespace = {
       events: {
         onReady: (event: { target: YouTubePlayerInstance }) => void;
         onStateChange: (event: { data: number }) => void;
-        onError?: (event: { data: number }) => void;
       };
     },
   ) => YouTubePlayerInstance;
@@ -127,7 +137,7 @@ function loadYouTubeApi(): Promise<YouTubeNamespace> {
   return youtubeApiPromise;
 }
 
-function YouTubeFallback({ video, onEnded, startAt = 0, onError, playerRefOut }: { video: Video; onEnded: () => void; startAt?: number; onError?: () => void; playerRefOut?: React.MutableRefObject<YouTubePlayerInstance | null> }) {
+function YouTubeFallback({ video, onEnded }: { video: Video; onEnded: () => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<YouTubePlayerInstance | null>(null);
   const onEndedRef = useRef(onEnded);
@@ -148,22 +158,17 @@ function YouTubeFallback({ video, onEnded, startAt = 0, onError, playerRefOut }:
       if (cancelled || !containerRef.current) return;
       playerRef.current = new YT.Player(containerRef.current, {
         videoId: videoIdRef.current,
-        playerVars: { autoplay: 1, controls: 1, playsinline: 1, rel: 0, start: startAt },
+        playerVars: { autoplay: 1, controls: 1, playsinline: 1, rel: 0 },
         events: {
           onReady: event => {
             readyRef.current = true;
-            if (playerRefOut) playerRefOut.current = event.target;
-            if (isMobile) event.target.mute();
+            if (isMobile) {
+              event.target.mute();
+            }
             event.target.playVideo();
           },
           onStateChange: event => {
             if (event.data === YT.PlayerState.ENDED) onEndedRef.current();
-          },
-          onError: (event: { data: number }) => {
-            // 101/150 = embedding not allowed, 100 = video not found → skip
-            if ([100, 101, 150].includes(event.data)) {
-              setTimeout(() => onEndedRef.current(), 500);
-            }
           },
         },
       });
@@ -194,8 +199,6 @@ export default function TVApp() {
   const videosRef = useRef<Video[]>([]);
   const queueRef = useRef<Video[]>([]);
   const nextCalledRef = useRef(false);
-  const ytPlayerRef = useRef<YouTubePlayerInstance | null>(null);
-  const [ytPaused, setYtPaused] = useState(false);
 
   function logUsage(label: string, start: number) {
     const seconds = Math.round((Date.now() - start) / 1000);
@@ -203,16 +206,6 @@ export default function TVApp() {
     fetch("/api/usage", { method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ type: "tv", label, seconds }) }).catch(() => {});
   }
-
-  // Emitir evento cuando cambia el canal (para resize PiP en retro)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      window.dispatchEvent(new CustomEvent("roomos-tv-channel", {
-        detail: { retro: !!(activeChannel as any).crt }
-      }));
-    }, 50);
-    return () => clearTimeout(timer);
-  }, [activeChannel]);
 
   // Cargar videos del canal activo
   useEffect(() => {
@@ -326,7 +319,7 @@ export default function TVApp() {
     d ? new Date(d).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" }) : "";
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", fontFamily: "monospace", fontSize: 12, background: (activeChannel as any).crt ? "transparent" : "#0a0a0a", color: "#fff" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", fontFamily: "monospace", fontSize: 12, background: "#0a0a0a", color: "#fff" }}>
 
       {/* Channel bar */}
       <div style={{ display: "flex", alignItems: "center", gap: 0, borderBottom: "1px solid #333", flexShrink: 0 }}>
@@ -368,15 +361,8 @@ export default function TVApp() {
             pointerEvents: mode === "tv" ? "auto" : "none",
           }}>
           {/* Video */}
-          <div style={{ flex: 1, background: (activeChannel as any).crt ? "transparent" : "#000", position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <div style={(activeChannel as any).crt ? {
-              aspectRatio: "4/3",
-              height: "100%",
-              maxWidth: "100%",
-              position: "relative",
-              overflow: "hidden",
-            } : { position: "absolute", inset: 0 }}>
-            {current && <YouTubeFallback video={current} onEnded={advanceOnce} startAt={(activeChannel as any).startAt ?? 0} playerRefOut={ytPlayerRef} />}
+          <div style={{ flex: 1, background: "#000", position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            {current && <YouTubeFallback video={current} onEnded={advanceOnce} />}
             {/* CRT overlay for retro channel */}
             {(activeChannel as any).crt && (
               <div style={{
@@ -385,7 +371,6 @@ export default function TVApp() {
                 mixBlendMode: "multiply",
               }} />
             )}
-            </div>
           </div>
           {/* Info bar — bigger for TV */}
           <div style={{ padding: "12px 16px", background: "#111", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0, gap: 16 }}>
@@ -397,20 +382,11 @@ export default function TVApp() {
                 {current?.channelName} {current?.published ? `· ${formatDate(current.published)}` : ""}
               </div>
             </div>
-            <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-              <button onClick={() => {
-                if (!ytPlayerRef.current) return;
-                if (ytPaused) { ytPlayerRef.current.playVideo(); setYtPaused(false); }
-                else { (ytPlayerRef.current as any).pauseVideo?.(); setYtPaused(true); }
-              }} style={{
-                background: "#222", border: "1px solid #444", color: "#fff",
-                padding: "10px 16px", cursor: "pointer", fontFamily: "monospace", fontSize: 14,
-              }}>{ytPaused ? "▶" : "⏸"}</button>
-              <button onClick={next} style={{
-                background: "#222", border: "1px solid #444", color: "#fff",
-                padding: "10px 20px", cursor: "pointer", fontFamily: "monospace", fontSize: 14, fontWeight: 700,
-              }}>⏭</button>
-            </div>
+            <button onClick={next} style={{
+              background: "#222", border: "1px solid #444",
+              color: "#fff", padding: "10px 20px", cursor: "pointer",
+              fontFamily: "monospace", fontSize: 14, fontWeight: 700, flexShrink: 0,
+            }}>⏭ SIGUIENTE</button>
           </div>
         </div>
 
