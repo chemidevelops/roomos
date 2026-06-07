@@ -349,24 +349,22 @@ export default function TVApp() {
 
       {/* Channel bar */}
       <div style={{ display: "flex", alignItems: "center", borderBottom: "1px solid #333", flexShrink: 0, minWidth: 0, overflow: "hidden" }}>
-        {isMobileView ? (
-          <select value={activeChannel.id}
-            onChange={e => setActiveChannel(CHANNELS.find(c => c.id === e.target.value) ?? CHANNELS[0])}
-            style={{ background: "#111", color: "#fff", border: "none", padding: "8px 10px", fontFamily: "monospace", fontSize: 11, fontWeight: 700, cursor: "pointer", flexShrink: 1, minWidth: 0, maxWidth: "50%" }}>
-            {CHANNELS.map(ch => <option key={ch.id} value={ch.id}>{ch.label}</option>)}
-          </select>
-        ) : (
-          <>
-            {CHANNELS.map(ch => (
-              <button key={ch.id} onClick={() => setActiveChannel(ch)} style={{
-                background: activeChannel.id === ch.id ? "#fff" : "transparent",
-                color: activeChannel.id === ch.id ? "#000" : "#888",
-                border: "none", padding: "10px 12px",
-                cursor: "pointer", fontFamily: "monospace", fontSize: 10, fontWeight: 700, whiteSpace: "nowrap",
-              }}>{ch.label}</button>
-            ))}
-          </>
-        )}
+        <style>{`.tv-sel{display:none}.tv-btns{display:flex}@media(max-width:500px){.tv-sel{display:block!important}.tv-btns{display:none!important}}`}</style>
+        <select className="tv-sel" value={activeChannel.id}
+          onChange={e => setActiveChannel(CHANNELS.find(c => c.id === e.target.value) ?? CHANNELS[0])}
+          style={{ background: "#111", color: "#fff", border: "none", padding: "8px 10px", fontFamily: "monospace", fontSize: 11, fontWeight: 700, cursor: "pointer", maxWidth: "50%" }}>
+          {CHANNELS.map(ch => <option key={ch.id} value={ch.id}>{ch.label}</option>)}
+        </select>
+        <div className="tv-btns">
+          {CHANNELS.map(ch => (
+            <button key={ch.id} onClick={() => setActiveChannel(ch)} style={{
+              background: activeChannel.id === ch.id ? "#fff" : "transparent",
+              color: activeChannel.id === ch.id ? "#000" : "#888",
+              border: "none", padding: "10px 12px",
+              cursor: "pointer", fontFamily: "monospace", fontSize: 10, fontWeight: 700, whiteSpace: "nowrap",
+            }}>{ch.label}</button>
+          ))}
+        </div>
         <div style={{ flex: 1 }} />
         <button onClick={() => setMode("tv")} style={{ background: mode === "tv" ? "#fff" : "transparent", color: mode === "tv" ? "#000" : "#888", border: "none", padding: "10px 12px", cursor: "pointer", fontFamily: "monospace", fontSize: 10, fontWeight: 700, flexShrink: 0 }}>▶ TV</button>
         <button onClick={() => setMode("rss")} style={{ background: mode === "rss" ? "#fff" : "transparent", color: mode === "rss" ? "#000" : "#888", border: "none", padding: "10px 12px", cursor: "pointer", fontFamily: "monospace", fontSize: 10, fontWeight: 700, flexShrink: 0 }}>≡ FEED</button>
