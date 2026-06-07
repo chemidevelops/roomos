@@ -233,8 +233,14 @@ export default function TVApp() {
             })))
             .catch(() => [] as Video[])
         )
-      ).then(results => {
-        const all = shuffle(results.flat());
+      ).then(async results => {
+        const raw = shuffle(results.flat());
+        const checked = await fetch("/api/embeddable", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ids: raw.map(v => v.id) }),
+        }).then(r => r.json()).then(d => new Set(d.ids as string[])).catch(() => null);
+        const all = checked ? raw.filter(v => checked.has(v.id)) : raw;
         setRssVideos(all);
         setVideos(all);
         setQueue(all);
