@@ -20,7 +20,7 @@ export default function NewsTicker() {
   return (
     <div style={{
       position: "fixed",
-      bottom: 36,
+      bottom: "calc(36px + env(safe-area-inset-bottom))",
       left: 0,
       right: 0,
       height: 28,
