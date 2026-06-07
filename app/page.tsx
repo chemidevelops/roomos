@@ -453,12 +453,14 @@ function MobilePocket() {
     <div style={{
       position: "fixed", inset: 0,
       display: "flex", flexDirection: "column",
+      isolation: "isolate",
       background: "#6b8fa8", color: "#1a1a1a",
       fontFamily: "var(--font-jetbrains-mono), monospace",
       paddingTop: "env(safe-area-inset-top)",
       paddingBottom: "env(safe-area-inset-bottom)",
     }}>
       <header style={{
+        position: "relative", zIndex: 20000,
         height: 44, flexShrink: 0,
         display: "flex", alignItems: "center",
         background: "#1a1a1a", color: "#fff",
@@ -569,6 +571,7 @@ function MobilePocket() {
       </main>
 
       <nav style={{
+        position: "relative", zIndex: 20000,
         height: 56, flexShrink: 0,
         display: "grid", gridTemplateColumns: "repeat(4, 1fr)",
         background: "#d9d4c9",
