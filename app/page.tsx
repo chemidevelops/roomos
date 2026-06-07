@@ -24,6 +24,7 @@ import { WALLPAPER_STYLES, STORAGE_KEY, THEME_KEY, type WallpaperKey, type Theme
 import NewsTicker from "@/components/ui/NewsTicker";
 import WikiApp from "@/components/ui/WikiApp";
 import TVLayout from "@/components/ui/TVLayout";
+import { RetroIcon } from "@/components/ui/RetroIcons";
 
 /* ─────────────────────────────────────────────────────────────
    Types
@@ -395,6 +396,201 @@ function MobileIconGrid({ onOpen }: { onOpen: (id: string) => void }) {
   );
 }
 
+type MobileSection = "home" | "media" | "read" | "more";
+
+const MOBILE_SECTIONS: Record<MobileSection, { label: string; apps: string[] }> = {
+  home:  { label: "Inicio", apps: ["tv", "radio", "podcasts", "rss", "calendar", "notes"] },
+  media: { label: "Medios", apps: ["tv", "radio", "podcasts"] },
+  read:  { label: "Leer", apps: ["rss", "wiki", "notes"] },
+  more:  { label: "Más", apps: ["calendar", "stats", "calculator", "terminal", "solitaire", "settings"] },
+};
+
+const MOBILE_APP_LABELS: Record<string, string> = {
+  tv: "TV",
+  radio: "Radio",
+  podcasts: "Podcasts",
+  rss: "RSS",
+  wiki: "Wiki",
+  calendar: "Agenda",
+  notes: "Notas",
+  stats: "Stats",
+  calculator: "Calc",
+  terminal: "Terminal",
+  solitaire: "Solitaire",
+  settings: "Ajustes",
+};
+
+function MobilePocket() {
+  const [section, setSection] = useState<MobileSection>("home");
+  const [activeApp, setActiveApp] = useState<string | null>(null);
+  const [mountedApps, setMountedApps] = useState<string[]>([]);
+  const [now, setNow] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(timer);
+  }, []);
+
+  function openApp(id: string) {
+    setMountedApps(apps => apps.includes(id) ? apps : [...apps, id]);
+    setActiveApp(id);
+  }
+
+  function selectSection(next: MobileSection) {
+    setSection(next);
+    setActiveApp(null);
+  }
+
+  const apps = MOBILE_SECTIONS[section].apps;
+  const date = now.toLocaleDateString("es-ES", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+  const time = now.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0,
+      display: "flex", flexDirection: "column",
+      background: "#6b8fa8", color: "#1a1a1a",
+      fontFamily: "var(--font-jetbrains-mono), monospace",
+      paddingTop: "env(safe-area-inset-top)",
+      paddingBottom: "env(safe-area-inset-bottom)",
+    }}>
+      <header style={{
+        height: 44, flexShrink: 0,
+        display: "flex", alignItems: "center",
+        background: "#1a1a1a", color: "#fff",
+        borderBottom: "2px solid #000",
+      }}>
+        {activeApp ? (
+          <button onClick={() => setActiveApp(null)} style={{
+            width: 48, alignSelf: "stretch",
+            border: 0, borderRight: "1px solid #555",
+            background: "#f0ebe0", color: "#1a1a1a",
+            fontFamily: "inherit", fontSize: 18, cursor: "pointer",
+          }}>‹</button>
+        ) : (
+          <div style={{
+            width: 48, alignSelf: "stretch",
+            display: "grid", placeItems: "center",
+            background: "#f0ebe0", color: "#1a1a1a",
+            borderRight: "1px solid #555",
+            fontWeight: 800, fontSize: 11,
+          }}>rOS</div>
+        )}
+        <div style={{
+          flex: 1, minWidth: 0, padding: "0 12px",
+          fontFamily: "var(--font-space-grotesk), sans-serif",
+          fontWeight: 700, fontSize: 15,
+          whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+        }}>
+          {activeApp ? MOBILE_APP_LABELS[activeApp] : "roomOS Pocket"}
+        </div>
+        <time style={{ padding: "0 12px", fontSize: 12, fontWeight: 700 }}>{time}</time>
+      </header>
+
+      <main style={{ flex: 1, minHeight: 0, position: "relative", overflow: "hidden" }}>
+        <div style={{
+          position: "absolute", inset: 0,
+          overflowY: "auto",
+          padding: "14px 12px 20px",
+          visibility: activeApp ? "hidden" : "visible",
+          pointerEvents: activeApp ? "none" : "auto",
+        }}>
+          {section === "home" && (
+            <section style={{
+              background: "#f0ebe0",
+              border: "2px solid #1a1a1a",
+              boxShadow: "3px 3px 0 #1a1a1a",
+              marginBottom: 14,
+            }}>
+              <div style={{
+                background: "#1a1a1a", color: "#fff",
+                padding: "7px 10px",
+                fontSize: 10, fontWeight: 700,
+                letterSpacing: "0.16em", textTransform: "uppercase",
+              }}>Hoy</div>
+              <div style={{ padding: "13px 12px" }}>
+                <div style={{
+                  fontFamily: "var(--font-space-grotesk), sans-serif",
+                  fontWeight: 700, fontSize: 19, textTransform: "capitalize",
+                }}>{date}</div>
+                <div style={{ marginTop: 5, color: "#4d5860", fontSize: 11 }}>
+                  Tu escritorio, en formato de bolsillo.
+                </div>
+              </div>
+            </section>
+          )}
+
+          <div style={{
+            padding: "7px 9px",
+            background: "#d9d4c9",
+            border: "2px solid #1a1a1a",
+            borderBottom: 0,
+            fontSize: 10, fontWeight: 700,
+            letterSpacing: "0.14em", textTransform: "uppercase",
+          }}>
+            {MOBILE_SECTIONS[section].label}
+          </div>
+          <div style={{
+            display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+            background: "#1a1a1a", gap: 2,
+            border: "2px solid #1a1a1a",
+          }}>
+            {apps.map(id => (
+              <button key={id} onClick={() => openApp(id)} style={{
+                minHeight: 104, padding: "13px 10px",
+                display: "flex", flexDirection: "column",
+                alignItems: "center", justifyContent: "center", gap: 9,
+                background: "#f0ebe0", color: "#1a1a1a",
+                border: 0, borderRadius: 0, cursor: "pointer",
+                fontFamily: "inherit",
+              }}>
+                <RetroIcon id={id} size={42} />
+                <span style={{ fontSize: 12, fontWeight: 700 }}>{MOBILE_APP_LABELS[id]}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {mountedApps.map(id => (
+          <div key={id} style={{
+            position: "absolute", inset: 0,
+            background: "#f0ebe0",
+            visibility: activeApp === id ? "visible" : "hidden",
+            pointerEvents: activeApp === id ? "auto" : "none",
+            overflow: "hidden",
+          }}>
+            <WindowContent id={id} onOpenWindow={openApp} />
+          </div>
+        ))}
+      </main>
+
+      <nav style={{
+        height: 56, flexShrink: 0,
+        display: "grid", gridTemplateColumns: "repeat(4, 1fr)",
+        background: "#d9d4c9",
+        borderTop: "2px solid #1a1a1a",
+      }}>
+        {(Object.keys(MOBILE_SECTIONS) as MobileSection[]).map(key => {
+          const selected = section === key && !activeApp;
+          return (
+            <button key={key} onClick={() => selectSection(key)} style={{
+              border: 0, borderRight: key !== "more" ? "1px solid #777" : 0,
+              background: selected ? "#1a1a1a" : "#d9d4c9",
+              color: selected ? "#fff" : "#1a1a1a",
+              fontFamily: "inherit", fontSize: 10, fontWeight: 700,
+              cursor: "pointer", borderRadius: 0,
+            }}>{MOBILE_SECTIONS[key].label}</button>
+          );
+        })}
+      </nav>
+    </div>
+  );
+}
+
 /* ─────────────────────────────────────────────────────────────
    Wallpaper helpers
 ───────────────────────────────────────────────────────────── */
@@ -680,10 +876,17 @@ function Desktop() {
 ───────────────────────────────────────────────────────────── */
 export default function Home() {
   const [isTV, setIsTV] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const tv = new URLSearchParams(window.location.search).get("tv") === "1";
     setIsTV(tv);
+    const media = window.matchMedia("(max-width: 767px)");
+    const update = () => setIsMobile(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
   }, []);
   if (isTV) return <TVLayout />;
+  if (isMobile) return <MobilePocket />;
   return <Desktop />;
 }
