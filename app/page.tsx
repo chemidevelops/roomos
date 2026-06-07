@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import FocusTimer from "@/components/ui/FocusTimer";
 import OSWindow from "@/components/ui/OSWindow";
 import DesktopIconItem from "@/components/ui/DesktopIconItem";
@@ -450,6 +451,7 @@ function MobilePocket() {
   const time = now.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
 
   return (
+    <>
     <div style={{
       position: "fixed", inset: 0,
       display: "flex", flexDirection: "column",
@@ -591,6 +593,45 @@ function MobilePocket() {
         })}
       </nav>
     </div>
+    {activeApp && typeof document !== "undefined" && createPortal(
+      <button
+        type="button"
+        aria-label="Cerrar aplicación"
+        onPointerDown={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          setActiveApp(null);
+        }}
+        onClick={() => setActiveApp(null)}
+        style={{
+          position: "fixed",
+          top: "calc(env(safe-area-inset-top) + 4px)",
+          left: 4,
+          zIndex: 2147483647,
+          width: 40,
+          height: 36,
+          display: "grid",
+          placeItems: "center",
+          padding: 0,
+          border: "2px solid #1a1a1a",
+          borderRadius: 0,
+          background: "#f0ebe0",
+          color: "#1a1a1a",
+          boxShadow: "2px 2px 0 #000",
+          fontFamily: "var(--font-jetbrains-mono), monospace",
+          fontSize: 20,
+          fontWeight: 700,
+          lineHeight: 1,
+          cursor: "pointer",
+          touchAction: "manipulation",
+          WebkitTapHighlightColor: "transparent",
+        }}
+      >
+        ×
+      </button>,
+      document.body
+    )}
+    </>
   );
 }
 
