@@ -55,18 +55,6 @@ const CHANNELS = [
     queries: LIVE_MUSIC_ARTISTS,
     sources: [],
   },
-  {
-    id: "retro",
-    label: "RETRO",
-    type: "playlist" as const,
-    playlists: [
-      "PLhRdlS4yaDvI8Jnx0_Tch6SIW_nkZTcoC",
-      "PLH4SfqNVbXjNDUq-XgO9NTBUwN_cOzw4T",
-    ],
-    startAt: 19,
-    sources: [],
-    crt: true,
-  },
 ];
 
 interface Video {
