@@ -8,18 +8,19 @@ import NotesApp from "./NotesApp";
 import CalendarApp from "./CalendarApp";
 import PodcastApp from "./PodcastApp";
 import StatsApp from "./StatsApp";
+import { RETRO_ICON_URLS } from "./RetroIcons";
 const TVApp = dynamic(() => import("./TVApp"), { ssr: false });
 
 type AppId = "tv" | "radio" | "rss" | "podcasts" | "calendar" | "notes" | "stats" | null;
 
-const APPS: { id: AppId; icon: string; label: string; color: string }[] = [
-  { id: "tv",       icon: "📺", label: "TV",       color: "#1a1a2e" },
-  { id: "radio",    icon: "📻", label: "Radio",    color: "#1a2e1a" },
-  { id: "rss",      icon: "📡", label: "Feeds",    color: "#2e1a1a" },
-  { id: "podcasts", icon: "🎙️", label: "Podcasts", color: "#2e2a1a" },
-  { id: "calendar", icon: "📅", label: "Agenda",   color: "#1a2a2e" },
-  { id: "notes",    icon: "📓", label: "Notas",    color: "#2e1a2e" },
-  { id: "stats",    icon: "📊", label: "Stats",    color: "#1a1a1a" },
+const APPS: { id: AppId; label: string }[] = [
+  { id: "tv",       label: "TV" },
+  { id: "radio",    label: "Radio" },
+  { id: "rss",      label: "Feeds" },
+  { id: "podcasts", label: "Podcasts" },
+  { id: "calendar", label: "Agenda" },
+  { id: "notes",    label: "Notas" },
+  { id: "stats",    label: "Stats" },
 ];
 
 function AppContent({ id }: { id: AppId }) {
@@ -31,6 +32,25 @@ function AppContent({ id }: { id: AppId }) {
   if (id === "notes")    return <NotesApp />;
   if (id === "stats")    return <StatsApp />;
   return null;
+}
+
+function Ticker() {
+  const [items, setItems] = useState<string[]>([]);
+  useEffect(() => {
+    fetch("/api/ticker").then(r => r.json()).then(d => setItems(d.items ?? [])).catch(() => {});
+  }, []);
+  if (!items.length) return null;
+  const text = items.join("   ·   ") + "   ·   ";
+  const duration = Math.max(60, items.length * 6);
+  return (
+    <div style={{ height: 44, background: "#1a1a1a", borderTop: "2px solid #333", display: "flex", alignItems: "center", overflow: "hidden", flexShrink: 0 }}>
+      <style>{`@keyframes tv-ticker { from { transform: translateX(0) } to { transform: translateX(-50%) } } .tv-ticker { display:inline-block; white-space:nowrap; animation: tv-ticker ${duration}s linear infinite; font-size:18px; color:#ddd; font-family:monospace; letter-spacing:0.05em; } `}</style>
+      <div style={{ flexShrink: 0, padding: "0 16px", borderRight: "1px solid #444", fontSize: 11, fontWeight: 700, color: "#FF6600", fontFamily: "monospace", letterSpacing: "0.15em", whiteSpace: "nowrap" }}>EUROGAMER.ES</div>
+      <div style={{ flex: 1, overflow: "hidden" }}>
+        <span className="tv-ticker">{text}{text}</span>
+      </div>
+    </div>
+  );
 }
 
 export default function TVLayout() {
@@ -47,27 +67,29 @@ export default function TVLayout() {
     return () => clearInterval(id);
   }, []);
 
+  const openApp = (id: AppId) => setOpen(id);
+
   if (open) {
     return (
-      <div style={{ width: "100vw", height: "100vh", background: "#000", display: "flex", flexDirection: "column" }}>
-        {/* Top bar */}
+      <div style={{ width: "100vw", height: "100vh", background: "#fff", display: "flex", flexDirection: "column" }}>
         <div style={{
-          height: 60, background: "rgba(0,0,0,0.8)",
-          display: "flex", alignItems: "center", padding: "0 40px",
-          borderBottom: "1px solid #222", flexShrink: 0,
-          backdropFilter: "blur(10px)",
+          height: 56, background: "repeating-linear-gradient(to bottom, #aaa 0px, #aaa 1px, #ccc 1px, #ccc 2px)",
+          display: "flex", alignItems: "center", padding: "0 32px",
+          borderBottom: "2px solid #888", flexShrink: 0,
         }}>
-          <button onClick={() => setOpen(null)} style={{
-            background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)",
-            color: "#fff", padding: "8px 20px", cursor: "pointer",
-            fontFamily: "system-ui", fontSize: 16, borderRadius: 6,
-            marginRight: 20,
-          }}>← Inicio</button>
-          <span style={{ color: "#fff", fontSize: 18, fontWeight: 600, fontFamily: "system-ui" }}>
-            {APPS.find(a => a.id === open)?.icon} {APPS.find(a => a.id === open)?.label}
+          <button
+            onClick={() => setOpen(null)}
+            onTouchEnd={(e) => { e.preventDefault(); setOpen(null); }}
+            style={{
+              background: "#fff", border: "1.5px solid #555",
+              padding: "6px 18px", cursor: "pointer",
+              fontFamily: "Chicago, 'Helvetica Neue', sans-serif", fontSize: 16,
+              marginRight: 24, borderRadius: 0,
+            }}>← Inicio</button>
+          <span style={{ fontFamily: "Chicago, 'Helvetica Neue', sans-serif", fontSize: 18, fontWeight: 700, color: "#000" }}>
+            {APPS.find(a => a.id === open)?.label}
           </span>
         </div>
-        {/* Content */}
         <div style={{ flex: 1, overflow: "hidden" }}>
           <AppContent id={open} />
         </div>
@@ -78,18 +100,17 @@ export default function TVLayout() {
   return (
     <div style={{
       width: "100vw", height: "100vh",
-      background: "radial-gradient(ellipse at center, #1a1a2e 0%, #0d0d0d 100%)",
+      background: "#6b8fa8",
       display: "flex", flexDirection: "column",
-      fontFamily: "system-ui, -apple-system, sans-serif",
       overflow: "hidden",
     }}>
       {/* Header */}
-      <div style={{ padding: "40px 60px 20px", display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-        <div>
-          <div style={{ fontSize: 13, color: "#555", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 4 }}>roomOS</div>
-          <div style={{ fontSize: 56, fontWeight: 700, color: "#fff", lineHeight: 1, letterSpacing: "-2px" }}>{time}</div>
+      <div style={{ padding: "32px 60px 16px", display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+        <div style={{ fontFamily: "Chicago, 'Helvetica Neue', Arial, sans-serif" }}>
+          <div style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 4 }}>roomOS</div>
+          <div style={{ fontSize: 64, fontWeight: 700, color: "#fff", lineHeight: 1, letterSpacing: "-2px", textShadow: "1px 1px 0 rgba(0,0,0,0.3)" }}>{time}</div>
         </div>
-        <div style={{ fontSize: 14, color: "#444", textAlign: "right" }}>
+        <div style={{ fontSize: 16, color: "rgba(255,255,255,0.7)", fontFamily: "Chicago, 'Helvetica Neue', sans-serif", textAlign: "right" }}>
           {new Date().toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" }).toUpperCase()}
         </div>
       </div>
@@ -99,40 +120,57 @@ export default function TVLayout() {
         flex: 1,
         display: "grid",
         gridTemplateColumns: "repeat(4, 1fr)",
-        gap: 20,
-        padding: "20px 60px 60px",
+        gap: 24,
+        padding: "16px 60px 24px",
         alignContent: "center",
       }}>
-        {APPS.map(app => (
-          <button
-            key={app.id}
-            onClick={() => setOpen(app.id)}
-            style={{
-              background: app.color,
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: 16,
-              padding: "40px 20px",
-              cursor: "pointer",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 16,
-              transition: "transform 0.1s, border-color 0.1s",
-            }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLElement).style.transform = "scale(1.05)";
-              (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.3)";
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLElement).style.transform = "scale(1)";
-              (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.08)";
-            }}
-          >
-            <span style={{ fontSize: 52 }}>{app.icon}</span>
-            <span style={{ color: "#fff", fontSize: 18, fontWeight: 600, letterSpacing: "0.02em" }}>{app.label}</span>
-          </button>
-        ))}
+        {APPS.map(app => {
+          const iconUrl = RETRO_ICON_URLS[app.id ?? ""] ?? null;
+          return (
+            <button
+              key={app.id}
+              onClick={() => openApp(app.id)}
+              onTouchEnd={(e) => { e.preventDefault(); openApp(app.id); }}
+              style={{
+                background: "rgba(255,255,255,0.15)",
+                border: "1.5px solid rgba(255,255,255,0.3)",
+                borderRadius: 4,
+                padding: "32px 20px 24px",
+                cursor: "pointer",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 16,
+                backdropFilter: "blur(4px)",
+                boxShadow: "2px 2px 0 rgba(0,0,0,0.2)",
+              }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.3)";
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.15)";
+              }}
+            >
+              {iconUrl ? (
+                <img src={iconUrl} width={72} height={72} style={{ imageRendering: "pixelated", display: "block" }} />
+              ) : (
+                <div style={{ width: 72, height: 72, background: "rgba(255,255,255,0.3)", borderRadius: 4 }} />
+              )}
+              <span style={{
+                color: "#fff",
+                fontSize: 18,
+                fontWeight: 700,
+                fontFamily: "Chicago, 'Helvetica Neue', Arial, sans-serif",
+                textShadow: "1px 1px 0 rgba(0,0,0,0.4)",
+                letterSpacing: "0.02em",
+              }}>{app.label}</span>
+            </button>
+          );
+        })}
       </div>
+
+      {/* Ticker */}
+      <Ticker />
     </div>
   );
 }
