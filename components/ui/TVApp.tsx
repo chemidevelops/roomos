@@ -354,10 +354,10 @@ export default function TVApp() {
             }}>{ch.label}</button>
           ))}
         </div>
-        <select className="tv-ch-select" style={{ display: "none" }}
+        <select className="tv-ch-select"
           value={activeChannel.id}
           onChange={e => setActiveChannel(CHANNELS.find(c => c.id === e.target.value) ?? CHANNELS[0])}
-          style={{ background: "#1a1a1a", color: "#fff", border: "none", padding: "10px 12px", fontFamily: "monospace", fontSize: 11, fontWeight: 700, cursor: "pointer" }}
+          style={{ display: "none", background: "#1a1a1a", color: "#fff", border: "none", padding: "10px 12px", fontFamily: "monospace", fontSize: 11, fontWeight: 700, cursor: "pointer" }}
         >
           {CHANNELS.map(ch => <option key={ch.id} value={ch.id}>{ch.label}</option>)}
         </select>
