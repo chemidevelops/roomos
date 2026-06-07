@@ -319,7 +319,7 @@ export default function TVApp() {
     d ? new Date(d).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" }) : "";
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", fontFamily: "monospace", fontSize: 12, background: "#0a0a0a", color: "#fff" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", fontFamily: "monospace", fontSize: 12, background: (activeChannel as any).crt ? "transparent" : "#0a0a0a", color: "#fff" }}>
 
       {/* Channel bar */}
       <div style={{ display: "flex", alignItems: "center", gap: 0, borderBottom: "1px solid #333", flexShrink: 0 }}>
@@ -361,7 +361,14 @@ export default function TVApp() {
             pointerEvents: mode === "tv" ? "auto" : "none",
           }}>
           {/* Video */}
-          <div style={{ flex: 1, background: "#000", position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ flex: 1, background: (activeChannel as any).crt ? "transparent" : "#000", position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={(activeChannel as any).crt ? {
+              aspectRatio: "4/3",
+              height: "100%",
+              maxWidth: "100%",
+              position: "relative",
+              overflow: "hidden",
+            } : { position: "absolute", inset: 0 }}>
             {current && <YouTubeFallback video={current} onEnded={advanceOnce} />}
             {/* CRT overlay for retro channel */}
             {(activeChannel as any).crt && (
