@@ -394,7 +394,7 @@ export default function TVApp() {
               background: "#222", border: "1px solid #444",
               color: "#fff", padding: "10px 20px", cursor: "pointer",
               fontFamily: "monospace", fontSize: 14, fontWeight: 700, flexShrink: 0,
-            }}>⏭ SIGUIENTE</button>
+            }}>Siguiente →</button>
           </div>
         </div>
 
