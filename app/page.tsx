@@ -520,7 +520,22 @@ function Desktop() {
       setIconPositions(positions);
     };
     window.addEventListener("roomos-reset-icons", onResetIcons);
-    return () => window.removeEventListener("roomos-reset-icons", onResetIcons);
+
+    // Resize TV window to PiP when retro channel selected
+    const onTVChannel = (e: Event) => {
+      const { retro } = (e as CustomEvent).detail;
+      setWindows(prev => prev.map(w => w.id === "tv" ? {
+        ...w,
+        width: retro ? 480 : 640,
+        height: retro ? 360 : 420,
+      } : w));
+    };
+    window.addEventListener("roomos-tv-channel", onTVChannel);
+
+    return () => {
+      window.removeEventListener("roomos-reset-icons", onResetIcons);
+      window.removeEventListener("roomos-tv-channel", onTVChannel);
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

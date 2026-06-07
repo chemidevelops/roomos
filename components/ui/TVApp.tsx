@@ -208,6 +208,13 @@ export default function TVApp() {
       body: JSON.stringify({ type: "tv", label, seconds }) }).catch(() => {});
   }
 
+  // Emitir evento cuando cambia el canal (para resize PiP en retro)
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("roomos-tv-channel", {
+      detail: { retro: !!(activeChannel as any).crt }
+    }));
+  }, [activeChannel]);
+
   // Cargar videos del canal activo
   useEffect(() => {
     setLoading(true);
