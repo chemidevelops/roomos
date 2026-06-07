@@ -72,6 +72,8 @@ export default function OSWindow({
         dragListener={false}
         dragMomentum={false}
         dragElastic={0}
+        layout="size"
+        transition={{ duration: 0.2, ease: "easeInOut" }}
         style={{ x, y,
           border: retroMode ? "1.5px solid #000" : "2px solid #1a1a1a",
           boxShadow: retroMode
@@ -84,7 +86,6 @@ export default function OSWindow({
           opacity: minimized ? 0 : 1,
           pointerEvents: minimized ? "none" : "auto",
           flexDirection: "column",
-          transition: "box-shadow 0.1s, width 0.15s, height 0.15s",
           ...maxStyle,
           ...(minimized ? {
             position: "fixed" as const,
