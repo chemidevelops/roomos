@@ -225,27 +225,52 @@ export default function TVApp() {
     setLoading(true);
 
     if (activeChannel.type === "search") {
-      const queries = shuffle(activeChannel.queries ?? []).slice(0, 12);
-      Promise.all(
-        queries.map(query =>
-          fetch(`/api/ytsearch?q=${encodeURIComponent(query)}&n=3`)
-            .then(r => r.json())
-            .then(d => (d.ids as string[]).map(id => ({
-              id,
-              title: query.replace(" live", "").replace(" concert", ""),
-              channelName: "Live Music",
-              published: "",
-              thumb: `https://i.ytimg.com/vi/${id}/mqdefault.jpg`,
-            })))
-            .catch(() => [] as Video[])
-        )
-      ).then(results => {
-        const all = shuffle(results.flat());
+      const allQueries = shuffle(activeChannel.queries ?? []);
+      const usedRef = { current: 0 };
+
+      const loadBatch = (queries: string[]) =>
+        Promise.all(
+          queries.map(query =>
+            fetch(`/api/ytsearch?q=${encodeURIComponent(query)}&n=2`)
+              .then(r => r.json())
+              .then(d => (d.ids as string[]).map(id => ({
+                id,
+                title: query.replace(/ live| concert/g, ""),
+                channelName: "Live Music",
+                published: "",
+                thumb: `https://i.ytimg.com/vi/${id}/mqdefault.jpg`,
+              })))
+              .catch(() => [] as Video[])
+          )
+        ).then(r => shuffle(r.flat()));
+
+      const BATCH = 10;
+      const first = allQueries.slice(0, BATCH);
+      usedRef.current = BATCH;
+
+      loadBatch(first).then(all => {
         setRssVideos(all);
         setVideos(all);
         setQueue(all);
         setCurrent(all[0] ?? null);
         setLoading(false);
+
+        // Auto-load more when queue runs low
+        const loadMoreIfNeeded = () => {
+          setQueue(q => {
+            if (q.length < 5 && usedRef.current < allQueries.length) {
+              const next = allQueries.slice(usedRef.current, usedRef.current + BATCH);
+              usedRef.current += BATCH;
+              loadBatch(next).then(more => {
+                setQueue(prev => [...prev, ...more]);
+                setVideos(prev => [...prev, ...more]);
+              });
+            }
+            return q;
+          });
+        };
+        // Check every time current video changes
+        (window as any).__tvLoadMore = loadMoreIfNeeded;
       });
       return;
     }
@@ -288,10 +313,11 @@ export default function TVApp() {
     });
   }, [activeChannel]);
 
-  // Log uso del video anterior al cambiar
+  // Log uso + check si hay que cargar más
   useEffect(() => {
     if (trackingRef.current) logUsage(trackingRef.current.label, trackingRef.current.start);
     if (current) trackingRef.current = { label: current.title, start: Date.now() };
+    if (activeChannel.type === "search") (window as any).__tvLoadMore?.();
   }, [current]);
 
   // Guardar progreso cada 2 minutos mientras reproduce
