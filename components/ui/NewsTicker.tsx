@@ -14,9 +14,9 @@ export default function NewsTicker() {
 
   if (items.length === 0) return null;
 
-  const text = shuffled.join("   ·   ") + "   ·   ";
   const shuffled = [...items].sort(() => Math.random() - 0.5);
   const duration = Math.max(35, shuffled.length * 4);
+  const text = shuffled.join("   ·   ") + "   ·   ";
 
   return (
     <div style={{
