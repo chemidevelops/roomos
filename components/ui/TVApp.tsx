@@ -331,10 +331,29 @@ export default function TVApp() {
     return () => clearInterval(id);
   }, [current]);
 
-  // Siguiente video — usa refs para evitar stale closures
+  // Siguiente video — cuando se vacía el pool, refresca el RSS
   function next() {
     const q = queueRef.current;
     const rest = q.slice(1);
+    if (rest.length === 0 && activeChannel.type === "rss") {
+      // Re-fetch RSS to get fresh videos
+      Promise.all(
+        activeChannel.sources.map(s =>
+          fetch(`/api/youtube?channelId=${s.id}`)
+            .then(r => r.json())
+            .then(d => d.videos as Video[])
+            .catch(() => [] as Video[])
+        )
+      ).then(results => {
+        const fresh = shuffle(results.flat());
+        videosRef.current = fresh;
+        queueRef.current = fresh;
+        setVideos(fresh);
+        setQueue(fresh);
+        setCurrent(fresh[0] ?? null);
+      });
+      return;
+    }
     const newQ = rest.length > 0 ? rest : shuffle(videosRef.current);
     queueRef.current = newQ;
     setQueue(newQ);
