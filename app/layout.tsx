@@ -17,6 +17,7 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "roomOS",
   description: "Your personal operating system",
+  icons: { icon: "/favicon.svg", apple: "/icon-192.png" },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,

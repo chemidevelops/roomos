@@ -6,7 +6,7 @@ export async function GET() {
   try {
     const res = await fetch(FEED, {
       headers: { "User-Agent": "roomOS Ticker" },
-      next: { revalidate: 1800 },
+      next: { revalidate: 600 },
     });
     const xml = await res.text();
     const items: string[] = [];

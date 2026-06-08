@@ -40,7 +40,7 @@ export default function WikiApp() {
       .catch(() => { setError(true); setLoading(false); });
   }, []);
 
-  const SLOT_ICONS = ["🌅", "☀️", "🌙"];
+  const SLOT_ICONS = ["·", "·", "·"];
 
   if (loading) return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", fontFamily: "monospace", color: "#aaa" }}>
@@ -68,7 +68,7 @@ export default function WikiApp() {
               opacity: data.slot === s ? 1 : 0.35, fontWeight: data.slot === s ? 700 : 400,
               cursor: "default",
             }}>
-              {SLOT_ICONS[s]} {["MAÑANA", "TARDE", "NOCHE"][s]}
+              {["MAÑANA", "TARDE", "NOCHE"][s]}
               {data.slot === s && <span style={{ color: "#f5c800" }}> ←</span>}
             </span>
           ))}
